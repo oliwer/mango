@@ -134,7 +134,7 @@ is $cursor->limit(-2)->batch_size(4)->num_to_return, -2,
 # Explain blocking
 $cursor = $collection->find({test => 2});
 $doc = $cursor->explain;
-is $doc->{n}, 1, 'one document';
+is $doc->{executionStats}{nReturned}, 1, 'one document';
 $doc = $cursor->next;
 is $doc->{test}, 2, 'right document';
 
@@ -145,7 +145,7 @@ $cursor->explain(
   sub {
     my ($cursor, $err, $doc) = @_;
     $fail   = $err;
-    $result = $doc->{n};
+    $result = $doc->{executionStats}{nReturned};
     Mojo::IOLoop->stop;
   }
 );
