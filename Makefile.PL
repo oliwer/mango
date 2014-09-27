@@ -13,15 +13,15 @@ WriteMakefile(
   NAME         => 'Mango',
   VERSION_FROM => 'lib/Mango.pm',
   ABSTRACT     => 'Pure-Perl non-blocking I/O MongoDB driver',
-  AUTHOR       => 'Sebastian Riedel <sri@cpan.org>',
+  AUTHOR       => 'Olivier Duclos <odc@cpan.org>',
   LICENSE      => 'artistic_2',
   META_MERGE   => {
     requires  => {perl => '5.010001'},
     resources => {
       license    => 'http://www.opensource.org/licenses/artistic-license-2.0',
       homepage   => 'http://mojolicio.us',
-      bugtracker => 'https://github.com/kraih/mango/issues',
-      repository => 'https://github.com/kraih/mango.git',
+      bugtracker => 'https://github.com/odc/mango/issues',
+      repository => 'https://github.com/odc/mango.git',
       x_IRC      => 'irc://irc.perl.org/#mojo'
     },
     no_index => {directory => ['t']}

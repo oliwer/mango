@@ -597,6 +597,8 @@ L<Drip Depot|http://www.dripdepot.com>, thank you!
 
 Sebastian Riedel, C<sri@cpan.org>.
 
+Current maintainer: Olivier Duclos C<odc@cpan.org>.
+
 =head1 CREDITS
 
 In alphabetical order:
@@ -618,7 +620,7 @@ the terms of the Artistic License version 2.0.
 
 =head1 SEE ALSO
 
-L<https://github.com/kraih/mango>, L<Mojolicious::Guides>,
+L<https://github.com/odc/mango>, L<Mojolicious::Guides>,
 L<http://mojolicio.us>.
 
 =cut
