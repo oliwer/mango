@@ -17,8 +17,15 @@ $collection->drop if $collection->options;
 my $oids = $collection->insert([{test => 3}, {test => 1}, {test => 2}]);
 is scalar @$oids, 3, 'three documents inserted';
 
+# Check cursor defaults
+my $cursor = $collection->find();
+is_deeply $cursor->query, {}, 'cursor query initialized';
+is_deeply $cursor->fields, {}, 'cursor fields initialized';
+is $cursor->new->fields, undef, 'undefined fields by default';
+is $cursor->new->query, undef, 'undefined query by default';
+
 # Fetch documents blocking
-my $cursor = $collection->find->batch_size(2);
+$cursor = $collection->find->batch_size(2);
 my @docs;
 ok !$cursor->id, 'no cursor id';
 push @docs, $cursor->next;

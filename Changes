@@ -1,5 +1,8 @@
 
-1.15  2014-09-23
+1.15  2014-10-01
+  - New Github repository: https://github.com/oliwer/mango
+  - Mango::Cursor::Query attributes 'fields' and 'query' are now
+    undefined by default. Thanks to alexbyk.
 
 1.14  2014-09-22
   - Fixed packaging bug.
