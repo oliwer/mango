@@ -36,7 +36,7 @@ sub refcount {
 
 =head1 NAME
 
-Mango::Util - xxx
+Mango::Util - Internal utilities for Mango
 
 =head1 DESCRIPTION
 
