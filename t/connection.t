@@ -184,4 +184,7 @@ ok $mango->db->command('getnonce')->{nonce}, 'command was successful';
 is_deeply $mango->hosts->[0], ['127.0.0.1', $port], 'right server';
 ok scalar @{$mango->hosts} > 1, 'more than one server';
 
+# Cleanup before leaving
+ok $collection->drop, 'drop connection';
+
 done_testing();

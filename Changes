@@ -1,5 +1,8 @@
 
 1.15  2014-10-01
+  - Memory management overhaul: $db->mango is no longer weakened.
+    Instead, the Mango object will keep a list of all the Databases
+    in use. Logic adapted from DBIX::Class. Thanks mst!
   - New Github repository: https://github.com/oliwer/mango
   - Mango::Cursor::Query attributes 'fields' and 'query' are now
     undefined by default. Thanks to alexbyk.

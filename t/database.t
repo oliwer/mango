@@ -8,6 +8,8 @@ plan skip_all => 'set TEST_ONLINE to enable this test'
 use Mango;
 use Mango::BSON qw(bson_code bson_dbref);
 use Mojo::IOLoop;
+use FindBin;
+use lib $FindBin::Bin;
 
 # Run command blocking
 my $mango = Mango->new($ENV{TEST_ONLINE});
@@ -27,6 +29,11 @@ $db->command(
 Mojo::IOLoop->start;
 ok !$fail, 'no error';
 ok $result, 'command was successful';
+
+# Memory management
+# This test used to fail when $db->mango was weakened
+require Other::Module;
+ok Other::Module::list_collections(), 'mango was not destroyed';
 
 # Write concern
 my $mango2  = Mango->new->w(2)->wtimeout(5000);
