@@ -20,8 +20,8 @@ WriteMakefile(
     resources => {
       license    => 'http://www.opensource.org/licenses/artistic-license-2.0',
       homepage   => 'http://mojolicio.us',
-      bugtracker => 'https://github.com/odc/mango/issues',
-      repository => 'https://github.com/odc/mango.git',
+      bugtracker => 'https://github.com/oliwer/mango/issues',
+      repository => 'https://github.com/oliwer/mango.git',
       x_IRC      => 'irc://irc.perl.org/#mojo'
     },
     no_index => {directory => ['t']}
