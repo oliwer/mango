@@ -151,7 +151,4 @@ eval { $bulk->ordered(0)->execute };
 like $@, qr/Write error at index 1: .+/, 'right error';
 like $@, qr/Write error at index 2: .+/, 'right error';
 
-# Cleanup before leaving
-ok $collection->drop, 'bulk drop';
-
 done_testing();

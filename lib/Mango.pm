@@ -5,17 +5,15 @@ use Carp 'croak';
 use Mango::BSON 'bson_doc';
 use Mango::Database;
 use Mango::Protocol;
-use Mango::Util qw(in_global_destruction refcount);
 use Mojo::IOLoop;
 use Mojo::URL;
 use Mojo::Util qw(dumper md5_sum);
-use Scalar::Util qw(weaken isweak);
+use Scalar::Util 'weaken';
 
 use constant DEBUG => $ENV{MANGO_DEBUG} || 0;
 use constant DEFAULT_PORT => 27017;
 
 has credentials => sub { [] };
-has db_register => sub { {} };
 has default_db  => 'admin';
 has hosts       => sub { [['localhost']] };
 has [qw(inactivity_timeout j)] => 0;
@@ -28,45 +26,15 @@ has w => 1;
 
 our $VERSION = '1.15';
 
-sub DESTROY {
-  my $self = shift;
-  state $global_destroy;
-
-  if ($global_destroy ||= in_global_destruction) {
-    # real destruction
-    return $self->_cleanup;
-  }
-
-  my $dbs = $self->db_register;
-
-  for my $db_name (keys %$dbs) {
-    if (ref $dbs->{$db_name} and refcount($dbs->{$db_name}) > 1) {
-      local $@;
-      eval {
-        $dbs->{$db_name}->mango($self);
-        weaken $dbs->{$db_name};
-        1;
-      } or do {
-        $global_destroy = 1;
-      };
-
-      last;
-    }
-  }
-}
+sub DESTROY { shift->_cleanup }
 
 sub backlog { scalar @{shift->{queue} || []} }
 
 sub db {
   my ($self, $name) = @_;
   $name //= $self->default_db;
-
-  if ($self->db_register->{$name}) {
-    return $self->db_register->{$name};
-  }
-
   my $db = Mango::Database->new(mango => $self, name => $name);
-  $self->db_register->{$name} = $db;
+  weaken $db->{mango};
   return $db;
 }
 
@@ -555,7 +523,8 @@ Number of queued operations that have not yet been assigned to a connection.
   my $db = $mango->db('test');
 
 Build L<Mango::Database> object for database, uses L</"default_db"> if no name
-is provided.
+is provided. Note that the reference L<Mango::Database/"mango"> is weakened,
+so the L<Mango> object needs to be referenced elsewhere as well.
 
 =head2 from_string
 

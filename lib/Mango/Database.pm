@@ -5,37 +5,8 @@ use Carp 'croak';
 use Mango::BSON qw(bson_code bson_doc);
 use Mango::Collection;
 use Mango::GridFS;
-use Mango::Util qw(in_global_destruction refcount);
-use Scalar::Util qw(isweak weaken);
 
 has [qw(mango name)];
-
-sub DESTROY {
-  return if state $global_destroy ||= in_global_destruction;
-
-  # return immediatly if this DB does not hold a mango
-  return if not ref $_[0]->{mango} or isweak $_[0]->{mango};
-
-  local $@;
-  eval {
-    weaken $_[0]->{mango};
-
-    if ($_[0]->{mango}) {
-      my $dbs = $_[0]->{mango}->db_register;
-      for my $name (keys %$dbs) {
-        if ($dbs->{$name}) {
-          $dbs->{$name} = $_[0] if $dbs->{$name} == $_[0];
-        }
-        else {
-          delete $dbs->{$name};
-        }
-      }
-    }
-    1;
-  } or do {
-    $global_destroy = 1;
-  };
-}
 
 sub build_write_concern {
   my $mango = shift->mango;

@@ -538,7 +538,4 @@ Mojo::IOLoop->remove($id);
 like $fail, qr/Premature connection close/, 'right error';
 ok !$result->{n}, 'remove was not successful';
 
-# Cleanup before leaving
-ok $collection->drop, 'drop collection';
-
 done_testing();
