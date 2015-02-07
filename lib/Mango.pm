@@ -203,8 +203,8 @@ sub _master {
   my ($self, $id, $nb, $hosts, $doc) = @_;
 
   # Check version
-  return $self->_error($id, 'MongoDB version 2.6 required')
-    unless ($doc->{maxWireVersion} || 0) >= 2;
+  return $self->_error($id, 'MongoDB version 3.0 required')
+    unless ($doc->{maxWireVersion} || 0) >= 3;
 
   # Continue with authentication if we are connected to the primary
   return $self->_auth($id) if $doc->{ismaster};
