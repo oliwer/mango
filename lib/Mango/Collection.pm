@@ -161,6 +161,19 @@ sub remove {
   return $self->_command($command, $cb);
 }
 
+sub rename {
+  my ($self, $name, $cb) = @_;
+
+  my $admin = $self->db->mango->db('admin');
+  my $dbname = $self->db->name;
+  my $oldname = join '.', $dbname, $self->name;
+  my $newname = join '.', $dbname, $name;
+
+  my $cmd = bson_doc renameCollection => $oldname, to => $newname;
+
+  $self->_command($cmd, $cb, sub { $self->db->collection($name) });
+}
+
 sub save {
   my ($self, $doc, $cb) = @_;
 
@@ -514,6 +527,20 @@ These options are currently available:
 Remove only one document.
 
 =back
+
+=head2 rename
+
+  my $new_collection = $collection->rename('NewName');
+
+Rename a collection, keeping all of its original contents and options. Returns
+a new Mango::Collection object pointing to the renamed collection. You can
+also append a callback to perform operation non-blocking.
+
+  $collection->rename('NewName' => sub {
+    my ($collection, $err, $oid) = @_;
+    ...
+  });
+  Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
 =head2 save
 

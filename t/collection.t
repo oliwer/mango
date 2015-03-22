@@ -52,6 +52,19 @@ Mojo::IOLoop->start;
 ok !$fail, 'no error';
 is $result->{count}, 2, 'right number of documents';
 
+# Rename the collection
+ok $collection = $collection->rename('renamed'), 'collection renamed';
+$collection->rename('collection_test' => sub {
+  my ($orig_collection, $err, $new_collection) = @_;
+  $fail = $err;
+  $result = $new_collection;
+  Mojo::IOLoop->stop;
+});
+Mojo::IOLoop->start;
+ok !$fail, 'no error';
+is $result->name, 'collection_test', 'collection renamed non-blocking';
+$collection = $result;
+
 # Update documents blocking
 is $collection->update({}, {'$set' => {bar => 'works'}}, {multi => 1})->{n},
   2, 'two documents updated';

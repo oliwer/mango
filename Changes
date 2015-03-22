@@ -1,4 +1,4 @@
-1.17  ?
+1.17  2015-03-23
  - ACHTUNG! MongoDB 3.0+ is now requiered.
    Older versions are no longer supported.
  - Added Mango::Database::list_collections to query collections with
@@ -8,6 +8,7 @@
    number of results, and to be faster (alexbyk).
  - Breaking change: Mango::Collection::options now returns the short name
    of the collection instead of the full_name (alexbyk).
+ - Added Mango::Collection::rename.
 
 1.16  2015-02-03
   - Fix git repository in Makefile.PL
