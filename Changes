@@ -1,3 +1,13 @@
+1.17  ?
+ - ACHTUNG! MongoDB 3.0+ is now requiered.
+   Older versions are no longer supported.
+ - Added Mango::Database::list_collections to query collections with
+   a Mango::Cursor with optional filtering.
+ - Mango::Database::collection_names also gains optional filtering.
+ - Improved Mango::Collection::index_information to accept a maximum
+   number of results, and to be faster (alexbyk).
+ - Breaking change: Mango::Collection::options now returns the short name
+   of the collection instead of the full_name (alexbyk).
 
 1.16  2015-02-03
   - Fix git repository in Makefile.PL

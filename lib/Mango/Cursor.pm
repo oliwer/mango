@@ -3,7 +3,7 @@ use Mojo::Base -base;
 
 use Mojo::IOLoop;
 
-has [qw(collection id)];
+has [qw(collection id ns)];
 has [qw(batch_size limit)] => 0;
 
 sub add_batch {
@@ -62,7 +62,7 @@ sub _continue {
   my ($self, $cb) = @_;
 
   my $collection = $self->collection;
-  my $name       = $collection->full_name;
+  my $name       = $self->ns // $collection->full_name;
   my $mango      = $collection->db->mango;
 
   # Non-blocking

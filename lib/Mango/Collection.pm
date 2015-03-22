@@ -90,16 +90,18 @@ sub find_one {
 sub full_name { join '.', $_[0]->db->name, $_[0]->name }
 
 sub index_information {
-  my ($self, $cb) = @_;
+  my $self = shift;
+  my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
 
-  # Non-blocking
-  my $collection = $self->db->collection('system.indexes');
-  my $cursor = $collection->find({ns => $self->full_name})->fields({ns => 0});
-  return $cursor->all(sub { shift; $self->$cb(shift, _indexes(shift)) })
-    if $cb;
+  my $cmd = bson_doc(listIndexes => $self->name, @_);
 
-  # Blocking
-  return _indexes($cursor->all);
+  $self->_command($cmd, $cb,
+    sub {
+      my $doc = shift or return bson_doc;
+      bson_doc map { delete $_->{ns}; (delete $_->{name}, $_) }
+        @{$doc->{cursor}->{firstBatch}};
+    }
+  );
 }
 
 sub insert {
@@ -138,13 +140,8 @@ sub map_reduce {
 sub options {
   my ($self, $cb) = @_;
 
-  # Non-blocking
-  my $query = {name => $self->full_name};
-  my $namespaces = $self->db->collection('system.namespaces');
-  return $namespaces->find_one($query => sub { shift; $self->$cb(@_) }) if $cb;
-
-  # Blocking
-  return $namespaces->find_one($query);
+  my $cmd = bson_doc(listCollections => 1, filter => { name => $self->name });
+  $self->_command($cmd, $cb, sub { shift->{cursor}->{firstBatch}->[0] });
 }
 
 sub remove {
@@ -237,12 +234,6 @@ sub _command {
   my $doc = $db->command($command);
   if (my $err = $protocol->write_error($doc)) { croak $err }
   return $return->($doc);
-}
-
-sub _indexes {
-  my $indexes = bson_doc;
-  if (my $docs = shift) { $indexes->{delete $_->{name}} = $_ for @$docs }
-  return $indexes;
 }
 
 sub _map_reduce {
@@ -439,6 +430,8 @@ Full name of this collection.
 =head2 index_information
 
   my $info = $collection->index_information;
+  # return only the 5 first indexes
+  my $info = $collection->index_information(cursor => { batchSize => 5 });
 
 Get index information for collection. You can also append a callback to
 perform operation non-blocking.

@@ -23,22 +23,24 @@ sub collection {
 }
 
 sub collection_names {
-  my ($self, $cb) = @_;
-
-  my $len        = length $self->name;
-  my $collection = $self->collection('system.namespaces');
+  my $self = shift;
+  my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
 
   # Non-blocking
-  return $collection->find->all(
-    sub {
+  return $self->list_collections(@_ => sub {
+    my ($self, $err, $cursor) = @_;
+    return $self->$cb($err, []) if $err;
+    $cursor->all(sub {
       my ($cursor, $err, $docs) = @_;
-      $self->$cb($err, [map { substr $_->{name}, $len + 1 } @$docs]);
-    }
-  ) if $cb;
+      @$docs = map { $_->{name} } @$docs;
+      $self->$cb($err, $docs);
+    });
+  }) if $cb;
 
   # Blocking
-  my $docs = $collection->find->all;
-  return [map { substr $_->{name}, $len + 1 } @$docs];
+  my $docs = $self->list_collections(@_)->all;
+  @$docs = map { $_->{name} } @$docs;
+  return $docs;
 }
 
 sub command {
@@ -78,6 +80,28 @@ sub dereference {
 }
 
 sub gridfs { Mango::GridFS->new(db => shift) }
+
+sub list_collections {
+  my $self = shift;
+  my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
+
+  my $command = bson_doc(listCollections => 1, @_);
+
+  # Non-blocking
+  return $self->command($command => sub {
+    my ($self, $err, $res) = @_;
+    $res = $res->{cursor};
+    my $cursor = Mango::Cursor->new(collection => $self->collection,
+      id => $res->{id}, ns => $res->{ns})->add_batch($res->{firstBatch});
+    $self->$cb($err, $cursor);
+  }) if $cb;
+
+  # Blocking
+  my $cursor = $self->command($command)->{cursor};
+  return Mango::Cursor->new(collection => $self->collection,
+    id => $cursor->{id}, ns => $cursor->{ns})
+    ->add_batch($cursor->{firstBatch});
+}
 
 sub stats { shift->command(bson_doc(dbstats => 1), @_) }
 
@@ -141,8 +165,9 @@ Build L<Mango::Collection> object for collection.
 
   my $names = $db->collection_names;
 
-Names of all collections in this database. You can also append a callback to
-perform operation non-blocking.
+Names of all collections in this database. You can filter the results by using
+the same arguments as for C<list_collections>. You can also append a callback
+to perform operation non-blocking.
 
   $db->collection_names(sub {
     my ($db, $err, $names) = @_;
@@ -183,6 +208,27 @@ operation non-blocking.
   my $gridfs = $db->gridfs;
 
 Build L<Mango::GridFS> object.
+
+=head2 list_collections
+
+  # return a cursor for all collections
+  my $cursor = $db->list_collections;
+  # only collections which name matchs a regex
+  my $cursor = $db->list_collections(filter => { name => qr{^prefix} });
+  # only capped collections
+  my $cursor = $db->list_collections(filter => { 'options.capped' => 1 });
+  # only the first 10 collections
+  my $cursor = $db->list_collections(cursor => { batchSize => 10 });
+
+Returns a L<Mango::Cursor> of all collections in this database. Each collection
+is represented by a document containing at least the keys C<name> and
+C<options>. You can also append a callback to perform operation non-blocking.
+
+  $db->list_collections(sub {
+    my ($db, $err, $cursor) = @_;
+    ...
+  });
+  Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
 =head2 stats
 

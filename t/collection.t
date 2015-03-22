@@ -110,7 +110,7 @@ is $collection->find_one($oid)->{atomic}, 2, 'right document';
 is $collection->remove({atomic => 2})->{n}, 1, 'removed one document';
 
 # Get options blocking
-is $collection->options->{name}, $collection->full_name, 'right name';
+is $collection->options->{name}, $collection->name, 'right name';
 
 # Get options non-blocking
 ($fail, $result) = ();
@@ -124,7 +124,7 @@ $collection->options(
 );
 Mojo::IOLoop->start;
 ok !$fail, 'no error';
-is $result->{name}, $collection->full_name, 'right name';
+is $result->{name}, $collection->name, 'right name';
 
 # Get options blocking (missing collection)
 is $mango->db->collection('collection_test2')->options, undef,
@@ -535,7 +535,7 @@ $mango->db->collection('collection_test')->remove(
 );
 Mojo::IOLoop->start;
 Mojo::IOLoop->remove($id);
-like $fail, qr/Premature connection close/, 'right error';
+like $fail, qr/Connect timeout/, 'right error';
 ok !$result->{n}, 'remove was not successful';
 
 done_testing();

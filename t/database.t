@@ -51,9 +51,15 @@ Mojo::IOLoop->start;
 ok !$fail, 'no error';
 ok exists $result->{objects}, 'has objects';
 
-# Get collection names blocking
+# List collections
 my $collection = $db->collection('database_test');
 $collection->insert({test => 1});
+ok @{$db->list_collections->all} > 0, 'found collections';
+is $db->list_collections(filter => { name => qr{base_test} })->all->[0]->{name},
+  'database_test', 'found collection using filtering';
+# non-blocking mode is tested implicitely by collection_names below
+
+# Get collection names blocking
 ok grep { $_ eq 'database_test' } @{$db->collection_names}, 'found collection';
 $collection->drop;
 
@@ -118,6 +124,6 @@ $mango->db->command(
 );
 Mojo::IOLoop->start;
 Mojo::IOLoop->remove($id);
-like $fail, qr/Premature connection close/, 'right error';
+like $fail, qr/Connect timeout/, 'right error';
 
 done_testing();
