@@ -4,6 +4,7 @@
  - Removed Mango::credentials
  - Fix potential DoS attack by properly checking the ObjectID format.
    Details here: http://sakurity.com/blog/2015/06/04/mongo_ruby_regexp.html
+ - A few documentation changes
 
 1.17  2015-03-23
  - ACHTUNG! MongoDB 3.0+ is now requiered.

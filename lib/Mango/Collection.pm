@@ -409,8 +409,8 @@ Build L<Mango::Cursor::Query> object for query.
   my $doc = $collection->find_and_modify(
     {query => {foo => 'bar'}, update => {'$set' => {foo => 'baz'}}});
 
-Update document atomically. You can also append a callback to perform
-operation non-blocking.
+Fetch and update or remove a document atomically. You can also append a callback
+to perform operation non-blocking.
 
   my $opts = {query => {foo => 'bar'}, update => {'$set' => {foo => 'baz'}}};
   $collection->find_and_modify($opts => sub {
@@ -418,6 +418,9 @@ operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+By default this method returns the unmodified version of the document. To
+change this behaviour, add the option C<new => 1>.
 
 =head2 find_one
 
@@ -502,13 +505,13 @@ operation non-blocking.
 
 =head2 remove
 
-  my $doc = $collection->remove;
-  my $doc = $collection->remove($oid);
-  my $doc = $collection->remove({foo => 'bar'});
-  my $doc = $collection->remove({foo => 'bar'}, {single => 1});
+  my $result = $collection->remove;
+  my $result = $collection->remove($oid);
+  my $result = $collection->remove({foo => 'bar'});
+  my $result = $collection->remove({foo => 'bar'}, {single => 1});
 
 Remove documents from collection. You can also append a callback to perform
-operation non-blocking.
+operation non-blocking. Returns a WriteResult document.
 
   $collection->remove(({foo => 'bar'}, {single => 1}) => sub {
     my ($collection, $err, $doc) = @_;
@@ -570,12 +573,12 @@ non-blocking.
 
 =head2 update
 
-  my $doc = $collection->update($oid, {foo => 'baz'});
-  my $doc = $collection->update({foo => 'bar'}, {foo => 'baz'});
-  my $doc = $collection->update({foo => 'bar'}, {foo => 'baz'}, {multi => 1});
+  my $result = $collection->update($oid, {foo => 'baz'});
+  my $result = $collection->update({foo => 'bar'}, {foo => 'baz'});
+  my $result = $collection->update({foo => 'bar'}, {foo => 'baz'}, {multi => 1});
 
 Update document in collection. You can also append a callback to perform
-operation non-blocking.
+operation non-blocking. Returns a WriteResult document.
 
   $collection->update(({foo => 'bar'}, {foo => 'baz'}, {multi => 1}) => sub {
     my ($collection, $err, $doc) = @_;

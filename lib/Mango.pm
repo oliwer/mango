@@ -377,6 +377,8 @@ with the L<Mojolicious> real-time web framework, and with multiple event loop
 support. Since MongoDB is still changing rapidly, only the latest stable
 version is supported.
 
+For MongoDB 2.6 support, use L<Mango> 1.16.
+
 To learn more about MongoDB you should take a look at the
 L<official documentation|http://docs.mongodb.org>, the documentation included
 in this distribution is no replacement for it.
