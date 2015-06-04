@@ -21,7 +21,7 @@ sub from_epoch {
 sub new {
   my $class = shift;
   return $class->SUPER::new unless defined(my $oid = shift);
-  croak qq{Invalid object id "$oid"} if $oid !~ /^[0-9a-fA-F]{24}$/;
+  croak qq{Invalid object id "$oid"} if $oid !~ /^[0-9a-fA-F]{24}\z/;
   return $class->SUPER::new(oid => pack('H*', $oid));
 }
 
