@@ -1,3 +1,8 @@
+1.18  2015-06-04
+ - Added support for SCRAM-SHA-1 authentication using Authen::SCRAM (alexbyk)
+   The old MONGODB-CR method has been removed.
+ - Removed Mango::credentials
+
 1.17  2015-03-23
  - ACHTUNG! MongoDB 3.0+ is now requiered.
    Older versions are no longer supported.
