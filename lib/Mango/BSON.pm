@@ -2,12 +2,12 @@ package Mango::BSON;
 use Mojo::Base -strict;
 
 use re 'regexp_pattern';
-use B;
 use Carp 'croak';
 use Exporter 'import';
 use Mango::BSON::Binary;
 use Mango::BSON::Code;
 use Mango::BSON::Document;
+use Mango::BSON::Number;
 use Mango::BSON::ObjectID;
 use Mango::BSON::Time;
 use Mango::BSON::Timestamp;
@@ -15,9 +15,9 @@ use Mojo::JSON;
 use Scalar::Util 'blessed';
 
 my @BSON = (
-  qw(bson_bin bson_code bson_dbref bson_decode bson_doc bson_encode),
-  qw(bson_false bson_length bson_max bson_min bson_oid bson_raw bson_time),
-  qw(bson_true bson_ts)
+  qw(bson_bin bson_code bson_dbref bson_decode bson_doc bson_double),
+  qw(bson_encode bson_false bson_int32 bson_int64 bson_length bson_max),
+  qw(bson_min bson_oid bson_raw bson_time bson_true bson_ts)
 );
 our @EXPORT_OK = (@BSON, 'encode_cstring');
 our %EXPORT_TAGS = (bson => \@BSON);
@@ -52,8 +52,12 @@ use constant {
   BINARY_USER_DEFINED => "\x80"
 };
 
-# 32bit integer range
-use constant {INT32_MIN => -(1 << 31) + 1, INT32_MAX => (1 << 31) - 1};
+# The pack() format to use for each numeric type
+my %num_pack_fmt = (
+  DOUBLE() => 'd<',
+  INT32()  => 'l<',
+  INT64()  => 'q<'
+);
 
 # Reuse boolean singletons
 my $FALSE = Mojo::JSON->false;
@@ -80,6 +84,8 @@ sub bson_doc {
   return \%hash;
 }
 
+sub bson_double { Mango::BSON::Number->new(shift, DOUBLE) }
+
 sub bson_encode {
   my $doc = shift;
 
@@ -94,6 +100,10 @@ sub bson_encode {
 }
 
 sub bson_false {$FALSE}
+
+sub bson_int32 { Mango::BSON::Number->new(shift, INT32) }
+
+sub bson_int64 { Mango::BSON::Number->new(shift, INT64) }
 
 sub bson_length { length $_[0] < 4 ? undef : unpack 'l<', substr($_[0], 0, 4) }
 
@@ -288,6 +298,12 @@ sub _encode_object {
     $value->seconds
     if $class eq 'Mango::BSON::Timestamp';
 
+  # Number
+  if ($class eq 'Mango::BSON::Number') {
+    my $t = $value->type;
+    return $t . $e . pack($num_pack_fmt{$t}, $value->value);
+  }
+
   # Blessed reference with TO_JSON method
   if (my $sub = $value->can('TO_BSON') // $value->can('TO_JSON')) {
     return _encode_value($e, $value->$sub);
@@ -329,20 +345,8 @@ sub _encode_value {
   }
 
   # Numeric
-  my $flags = B::svref_2object(\$value)->FLAGS;
-  if ($flags & (B::SVp_IOK | B::SVp_NOK)) {
-    if (0 + $value eq $value && $value * 0 == 0) {
-
-      # Double
-      return DOUBLE . $e . pack('d<', $value) if $flags & B::SVp_NOK;
-
-      # Int32
-      return INT32 . $e . pack('l<', $value)
-        if $value <= INT32_MAX && $value >= INT32_MIN;
-
-      # Int64
-      return INT64 . $e . pack('q<', $value);
-    }
+  if (my $type = Mango::BSON::Number::guess_type($value)) {
+    return $type . $e . pack($num_pack_fmt{$type}, $value);
   }
 
   # String
@@ -446,6 +450,13 @@ as a generic ordered hash.
   delete $hash->{two};
   say for keys %$hash;
 
+=head2 bson_double
+
+  my $doc = { foo => bson_double(13.0) };
+
+Force a scalar value to be encoded as a double in MongoDB. Croaks if the
+value is incompatible with the double type.
+
 =head2 bson_encode
 
   my $bson = bson_encode $doc;
@@ -458,6 +469,23 @@ Encode Perl data structures into BSON.
   my $false = bson_false;
 
 Create new BSON element of the boolean type false.
+
+=head2 bson_int32
+
+  my $doc = { foo => bson_int32(13) };
+
+  # This will die (integer is too big)
+  my $doc = { foo => bson_int32(2147483648) };
+
+Force a scalar value to be encoded as a 32 bit integer in MongoDB. Croaks if
+the value is incompatible with the int32 type.
+
+=head2 bson_int64
+
+  my $doc = { foo => bson_int64(666) };
+
+Force a scalar value to be encoded as a 64 bit integer in MongoDB. Croaks if
+the value is incompatible with the int64 type.
 
 =head2 bson_length
 
