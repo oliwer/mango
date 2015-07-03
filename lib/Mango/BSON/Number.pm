@@ -81,51 +81,41 @@ Mango::BSON::Number - Numerical types
 
 =head1 SYNOPSIS
 
-  use Mango::BSON::Time;
+  use Mango::BSON;
+  use Mango::BSON::Number;
 
-  my $time = Mango::BSON::Time->new(time * 1000);
-  say $time->to_epoch;
+  my $number = Mango::BSON::Number->new(666, Mango::BSON::INT64);
+  say $number;
 
 =head1 DESCRIPTION
 
-L<Mango::BSON::Time> is a container for the BSON datetime type used by
-L<Mango::BSON>.
+L<Mango::BSON::Number> is a container for numerical values with a strict
+type.
 
 =head1 METHODS
 
-L<Mango::BSON::Time> inherits all methods from L<Mojo::Base> and implements
+L<Mango::BSON::Number> inherits all methods from L<Mojo::Base> and implements
 the following new ones.
 
 =head2 new
 
-  my $time = Mango::BSON::Time->new;
-  my $time = Mango::BSON::Time->new(time * 1000);
+  my $number = Mango::BSON::Number->new(3.14, Mango::BSON::DOUBLE);
 
-Construct a new L<Mango::BSON::Time> object.
+Construct a new L<Mango::BSON::Number> object. Croak if the value is
+incompatible with the given type. The 3 supported types are C<DOUBLE>,
+C<INT32> and C<INT64>.
 
 =head2 TO_JSON
 
-  my $num = $time->TO_JSON;
+  my $num = $obj->TO_JSON;
 
-Numeric representation of time.
-
-=head2 to_datetime
-
-  my $str = $time->to_datetime;
-
-Convert time to L<RFC 3339|http://tools.ietf.org/html/rfc3339> date and time.
-
-=head2 to_epoch
-
-  my $epoch = $time->to_epoch;
-
-Convert time to floating seconds since the epoch.
+Return the numerical value.
 
 =head2 to_string
 
   my $str = $time->to_string;
 
-Stringify time.
+Return the value as a string.
 
 =head1 OPERATORS
 
