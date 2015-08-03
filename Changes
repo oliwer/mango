@@ -1,3 +1,6 @@
+1.19  2015-08-03
+ - Fix packaging issue: Auth::SCRAM was missing from v1.18
+
 1.18  2015-06-04
  - Added support for SCRAM-SHA-1 authentication using Authen::SCRAM (alexbyk)
    The old MONGODB-CR method has been removed.
