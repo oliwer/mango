@@ -1,3 +1,6 @@
+1.20  2015-08-04
+ - Fix failing test case when Authen::SCRAM is not installed
+
 1.19  2015-08-03
  - Fix packaging issue: Auth::SCRAM was missing from v1.18
 
