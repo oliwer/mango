@@ -420,7 +420,7 @@ to perform operation non-blocking.
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
 By default this method returns the unmodified version of the document. To
-change this behaviour, add the option C<new => 1>.
+change this behaviour, add the option C<new =E<gt> 1>.
 
 =head2 find_one
 
