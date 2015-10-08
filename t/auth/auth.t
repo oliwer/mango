@@ -5,6 +5,9 @@ use Test::More;
 use Mango;
 use Data::Dumper;
 
+plan skip_all => 'set TEST_ONLINE to enable this test'
+  unless $ENV{TEST_ONLINE};
+
 {
   package Mango::Auth::MyTest;
   use Mojo::Base 'Mango::Auth';

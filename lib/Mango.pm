@@ -28,7 +28,7 @@ has w => 1;
 # is good for security.
 Hash::Util::FieldHash::fieldhash my %AUTH;
 
-our $VERSION = '1.18';
+our $VERSION = '1.20';
 
 sub DESTROY { shift->_cleanup }
 

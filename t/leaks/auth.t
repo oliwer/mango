@@ -4,6 +4,9 @@ use Mojo::Base -strict;
 use Test::More;
 use Mango;
 
+plan skip_all => 'set TEST_ONLINE to enable this test'
+  unless $ENV{TEST_ONLINE};
+
 my (@DESTROYED, @CREATED);
 my $destroy = sub { push @DESTROYED, ref shift };
 my $new     = sub { push @CREATED,   shift };
