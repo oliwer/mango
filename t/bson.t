@@ -142,6 +142,45 @@ is bson_encode($doc), $bytes, 'successful roundtrip';
 $doc = bson_decode(bson_encode {test => -1.5});
 is $doc->{test}, -1.5, 'successful roundtrip';
 
+# Double nan roundtrip
+$bytes = "\x14\x00\x00\x00\x01\x68\x65\x6c\x6c\x6f\x00\x00\x00\x00\x00\x00\x00"
+  . "\xf8\x7f\x00";
+$doc = bson_decode($bytes);
+is_deeply $doc, {hello => 0+'nAn'}, 'right double nan document';
+is bson_encode($doc), $bytes, 'successful double nan roundtrip';
+
+# Check that string 'nan' is encoded correctly (and *not* as not-a-number
+# floating point)
+$bytes = "\x14\x00\x00\x00\x02\x68\x65\x6c\x6c\x6f\x00\x04\x00\x00\x00\x6e\x61"
+  . "\x6e\x00\x00";
+is bson_encode({hello => 'nan'}), $bytes, 'right string-nan encoding';
+
+# Double inf roundtrip
+$bytes = "\x14\x00\x00\x00\x01\x68\x65\x6c\x6c\x6f\x00\x00\x00\x00\x00\x00\x00"
+  . "\xf0\x7f\x00";
+$doc = bson_decode($bytes);
+is_deeply $doc, {hello => 0+'iNf'}, 'right double inf document';
+is bson_encode($doc), $bytes, 'successful double inf roundtrip';
+
+# Check that string 'inf' is encoded correctly (and *not* as infinity
+# floating point)
+$bytes = "\x14\x00\x00\x00\x02\x68\x65\x6c\x6c\x6f\x00\x04\x00\x00\x00\x69\x6e"
+  . "\x66\x00\x00";
+is bson_encode({hello => 'inf'}), $bytes, 'right string-inf encoding';
+
+# Double -inf roundtrip
+$bytes = "\x14\x00\x00\x00\x01\x68\x65\x6c\x6c\x6f\x00\x00\x00\x00\x00\x00\x00"
+  . "\xf0\xff\x00";
+$doc = bson_decode($bytes);
+is_deeply $doc, {hello => 0+'-iNf'}, 'right double -inf document';
+is bson_encode($doc), $bytes, 'successful double -inf roundtrip';
+
+# Check that string '-inf' is encoded correctly (and *not* as minus infinity
+# floating point)
+$bytes = "\x15\x00\x00\x00\x02\x68\x65\x6c\x6c\x6f\x00\x05\x00\x00\x00\x2d\x69\x6e"
+  . "\x66\x00\x00";
+is bson_encode({hello => '-inf'}), $bytes, 'right string-inf encoding';
+
 # Int32 roundtrip
 $bytes = "\x0f\x00\x00\x00\x10\x6d\x69\x6b\x65\x00\x64\x00\x00\x00\x00";
 $doc   = bson_decode($bytes);

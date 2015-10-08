@@ -45,7 +45,11 @@ sub isa_number {
   my $flags = B::svref_2object(\$value)->FLAGS;
 
   if ($flags & (B::SVp_IOK | B::SVp_NOK)) {
-    if (0 + $value eq $value && $value * 0 == 0) {
+    if ( ( 0 + $value eq $value && $value * 0 == 0)
+      || ( 0 + 'nan' eq $value )
+      || ( 0 + '+inf' eq $value )
+      || ( 0 + '-inf' eq $value ) )
+    {
       return $flags;
     }
   }
