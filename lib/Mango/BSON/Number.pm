@@ -39,7 +39,6 @@ sub TO_JSON { 0 + shift->value }
 
 sub to_string { '' . shift->value }
 
-
 sub isa_number {
   my $value = shift;
 
@@ -113,9 +112,29 @@ Return the numerical value.
 
 =head2 to_string
 
-  my $str = $time->to_string;
+  my $str = $num->to_string;
 
 Return the value as a string.
+
+=head2 isa_number
+
+  my $flags = Mango::BSON::Number::isa_number(25);
+
+Determine if the given variable is a number by looking at the internal
+flags of the perl scalar object.
+
+Return C<undef> if the value is not a number, or a non-null value otherwise.
+This value contains flags which can be used for finer analysis of the scalar.
+
+=head2 guess_type
+
+  my $mongo_type = Mango::BSON::Number::guess_type(25);
+
+Chose which BSON type to use to encode the given numeric value. Possible
+types are: C<Mango::BSON::DOUBLE>, C<Mango::BSON::INT32> or
+C<Mango::BSON::INT64>.
+
+Return C<undef> if the given value is not a number.
 
 =head1 OPERATORS
 
@@ -123,13 +142,11 @@ L<Mango::BSON::Time> overloads the following operators.
 
 =head2 bool
 
-  my $bool = !!$time;
-
-Always true.
+  my $bool = !!$num;
 
 =head2 stringify
 
-  my $str = "$time";
+  my $str = "$num";
 
 Alias for L</to_string>.
 
