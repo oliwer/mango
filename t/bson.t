@@ -181,6 +181,15 @@ $bytes = "\x15\x00\x00\x00\x02\x68\x65\x6c\x6c\x6f\x00\x05\x00\x00\x00\x2d\x69\x
   . "\x66\x00\x00";
 is bson_encode({hello => '-inf'}), $bytes, 'right string-inf encoding';
 
+# Check explicit double serializations
+$bytes = "\x10\x00\x00\x00\x01\x78\x00\x00\x00\x00\x00\x00\x00\x37\x40\x00";
+is bson_encode({x => bson_double(23.0)}), $bytes, 'encode double to double';
+is bson_encode({x => bson_double(23)}), $bytes, 'encode int to double';
+is bson_encode({x => bson_double("23")}), $bytes, 'encode string to double';
+$bytes = "\x10\x00\x00\x00\x01\x78\x00\x00\x00\x00\x00\x00\x00\xf8\x7f\x00";
+is bson_encode({x => bson_double(0+'nan')}), $bytes, 'encode double NaN to double';
+is bson_encode({x => bson_double("nan")}), $bytes, 'encode string NaN to double';
+
 # Int32 roundtrip
 $bytes = "\x0f\x00\x00\x00\x10\x6d\x69\x6b\x65\x00\x64\x00\x00\x00\x00";
 $doc   = bson_decode($bytes);
@@ -188,6 +197,17 @@ is_deeply $doc, {mike => 100}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 $doc = bson_decode(bson_encode {test => -100});
 is $doc->{test}, -100, 'successful roundtrip';
+
+# Check explicit Int32 serializations
+$bytes = "\x0c\x00\x00\x00\x10\x78\x00\x33\x77\xaa\x55\x00";
+is bson_encode({x => bson_int32(0x55aa7733)}), $bytes, 'encode int to Int32';
+is bson_encode({x => bson_int32(1437234995)}), $bytes, 'encode int to Int32';
+is bson_encode({x => bson_int32(1437234995.3)}), $bytes, 'encode float to Int32 (round down)';
+is bson_encode({x => bson_int32("1437234995")}), $bytes, 'encode string to Int32';
+is bson_encode({x => bson_int32(0x155aa7733)}), $bytes, 'encode Int64 to Int32 (truncate)';
+$bytes = "\x0c\x00\x00\x00\x10\x78\x00\xfe\xff\xff\xff\x00";
+is bson_encode({x => bson_int32(0xfffffffe)}), $bytes, 'encode large int to Int32';
+is bson_encode({x => bson_int32(-2)}), $bytes, 'encode negative int to Int32';
 
 # Int64 roundtrip
 $bytes = "\x13\x00\x00\x00\x12\x6d\x69\x6b\x65\x00\x01\x00\x00\x80\x00\x00\x00"
@@ -197,6 +217,18 @@ is_deeply $doc, {mike => 2147483649}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 $doc = bson_decode(bson_encode {test => -2147483648});
 is $doc->{test}, -2147483648, 'successful roundtrip';
+
+# Check explicit Int64 serializations
+$bytes = "\x10\x00\x00\x00\x12\x78\x00\x33\x77\xaa\x55\x00\x00\x00\x00\x00";
+is bson_encode({x => bson_int64(0x55aa7733)}), $bytes, 'encode int to Int64';
+is bson_encode({x => bson_int64(1437234995)}), $bytes, 'encode int to Int64';
+is bson_encode({x => bson_int64(1437234995.3)}), $bytes, 'encode float to Int64 (round down)';
+is bson_encode({x => bson_int64("1437234995")}), $bytes, 'encode string to Int64';
+$bytes = "\x10\x00\x00\x00\x12\x78\x00\x33\x77\xaa\x55\x01\x00\x00\x00\x00";
+is bson_encode({x => bson_int64(0x155aa7733)}), $bytes, 'encode int64 to Int64 (truncate)';
+$bytes = "\x10\x00\x00\x00\x12\x78\x00\xfe\xff\xff\xff\xff\xff\xff\xff\x00";
+is bson_encode({x => bson_int64(0xfffffffffffffffe)}), $bytes, 'encode large int to Int64';
+is bson_encode({x => bson_int64(-2)}), $bytes, 'encode negative int to Int64';
 
 # Boolean roundtrip
 $bytes = "\x0c\x00\x00\x00\x08\x74\x72\x75\x65\x00\x01\x00";

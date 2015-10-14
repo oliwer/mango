@@ -14,22 +14,14 @@ has [qw(value type)];
 sub new {
   my ($class, $value, $type) = @_;
 
-  return undef unless defined $value;
-  $type //= Mango::BSON::DOUBLE();
+  $value //= 0;
+  $type  //= Mango::BSON::DOUBLE();
 
-  my $guessed_type = guess_type($value) or
-    croak "Not a numerical value: '$value'";
-
-  # Make sure the requested type is coherent with the value
-  if ($guessed_type ne $type) {
-
-    # We detected a double but user wants an int
-    croak "Cannot save value '$value' as an integer"
-      if $guessed_type eq Mango::BSON::DOUBLE();
-
-    # We detected an int64 but user wants an int32
-    croak "Cannot save value '$value' as an INT32"
-      if $guessed_type > $type;
+  if ($type ne Mango::BSON::DOUBLE() &&
+      $type ne Mango::BSON::INT32()  &&
+      $type ne Mango::BSON::INT64())
+  {
+    croak "Invalid numerical type: '$type'";
   }
 
   return $class->SUPER::new(value => $value, type => $type);
