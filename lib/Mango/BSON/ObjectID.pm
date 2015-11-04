@@ -10,7 +10,7 @@ use Sys::Hostname 'hostname';
 my $MACHINE = substr md5_bytes(hostname), 0, 3;
 
 # Global counter
-my $COUNTER = 0;
+my $COUNTER = int(rand(0xffffff));
 
 sub from_epoch {
   my ($self, $epoch) = @_;
