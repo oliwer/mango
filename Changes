@@ -1,3 +1,9 @@
+1.21  2015-11-04
+ - Add new subs: bson_int32, bson_int64 and bson_double to force the
+   type of a numeric value. This is useful when your database is used
+   by strongly typed applications.
+ - Randomize the ObjectID counter at startup (as required by the MongoDB specs)
+
 1.20  2015-08-04
  - Fix failing test case when Authen::SCRAM is not installed
 
