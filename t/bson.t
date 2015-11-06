@@ -19,6 +19,12 @@ use Mojo::ByteStream 'b';
 use Mojo::JSON 'encode_json';
 use Scalar::Util 'dualvar';
 
+# check if $val is present in a list
+sub isIn {
+  my $val = shift;
+  scalar grep { $_ eq $val } @_;
+}
+
 # Ordered document
 my $doc = bson_doc(a => 1, c => 2, b => 3);
 $doc->{d} = 4;
@@ -186,9 +192,13 @@ $bytes = "\x10\x00\x00\x00\x01\x78\x00\x00\x00\x00\x00\x00\x00\x37\x40\x00";
 is bson_encode({x => bson_double(23.0)}), $bytes, 'encode double to double';
 is bson_encode({x => bson_double(23)}), $bytes, 'encode int to double';
 is bson_encode({x => bson_double("23")}), $bytes, 'encode string to double';
+
+# Perl can encode NaN either with a positive or negative sign bit, and
+# we cannot know which one in advance, so we need to accept both versions.
 $bytes = "\x10\x00\x00\x00\x01\x78\x00\x00\x00\x00\x00\x00\x00\xf8\x7f\x00";
-is bson_encode({x => bson_double(0+'nan')}), $bytes, 'encode double NaN to double';
-is bson_encode({x => bson_double("nan")}), $bytes, 'encode string NaN to double';
+my $bytes_alt = "\x10\x00\x00\x00\x01\x78\x00\x00\x00\x00\x00\x00\x00\xf8\xff\x00";
+ok isIn(bson_encode({x => bson_double(0+'nan')}), $bytes, $bytes_alt), 'encode double NaN to double';
+ok isIn(bson_encode({x => bson_double("nan")}), $bytes, $bytes_alt), 'encode string NaN to double';
 
 # Int32 roundtrip
 $bytes = "\x0f\x00\x00\x00\x10\x6d\x69\x6b\x65\x00\x64\x00\x00\x00\x00";
