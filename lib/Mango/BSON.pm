@@ -29,6 +29,7 @@ use constant {
   DOCUMENT   => "\x03",
   ARRAY      => "\x04",
   BINARY     => "\x05",
+  UNDEFINED  => "\x06",
   OBJECT_ID  => "\x07",
   BOOL       => "\x08",
   DATETIME   => "\x09",
@@ -233,6 +234,10 @@ sub _decode_value {
   return bson_ts(
     reverse map({ unpack 'l<', substr($$_, 0, 4, '') } $bsonref, $bsonref))
     if $type eq TIMESTAMP;
+
+  # Undefined - a deprecated type which should not exist anymore
+  # but apparently still does: https://github.com/oliwer/mango/issues/1
+  return undef if $type eq UNDEFINED;
 
   # Unknown
   croak 'Unknown BSON type';
