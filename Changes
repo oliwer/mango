@@ -1,3 +1,8 @@
+1.22  2015-11-06
+ - Fix test with BSON encoding of NaN with perl 5.23+
+ - Handle the deprecated BSON type 'Undefined' (very rare case)
+ - Fix BSON types MinKey and MaxKey. Their value was switched.
+
 1.21  2015-11-04
  - Add new subs: bson_int32, bson_int64 and bson_double to force the
    type of a numeric value. This is useful when your database is used
