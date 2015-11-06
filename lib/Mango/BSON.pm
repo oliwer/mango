@@ -40,8 +40,8 @@ use constant {
   INT32      => "\x10",
   TIMESTAMP  => "\x11",
   INT64      => "\x12",
-  MIN_KEY    => "\x7f",
-  MAX_KEY    => "\xff"
+  MIN_KEY    => "\xff",
+  MAX_KEY    => "\x7f"
 };
 
 # Binary subtypes
