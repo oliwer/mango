@@ -62,7 +62,8 @@ sub _authenticate {
   my $command = $self->_cmd_sasl_start($scram_client->first_msg);
   $mango->_fast($id, $db, $command, $delay->begin(0));
 
-  $delay->wait unless $cnx->{nb};
+  $delay->wait;
+  #$delay->ioloop->one_tick;
 
 }
 

@@ -109,7 +109,10 @@ sub _cleanup {
   # Clean up connections
   delete $self->{pid};
   my $connections = delete $self->{connections};
-  $self->_loop($connections->{$_}{nb})->remove($_) for keys %$connections;
+  for my $c (keys %$connections) {
+    my $loop = $self->_loop($connections->{$c}{nb});
+    $loop->remove($c) if $loop;
+  }
 
   # Clean up active operations
   my $queue = delete $self->{queue} || [];
