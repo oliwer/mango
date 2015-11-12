@@ -1,3 +1,9 @@
+1.23  2015-11-12
+ - Fix a nasty bug where Mango would not finish to authenticate to the
+   server before sending the first request, resulting in an authentication
+   error. More details in bug #10 on Github.
+ - Small documentation fix thanks to Mohammad S Anwar.
+
 1.22  2015-11-06
  - Fix test with BSON encoding of NaN with perl 5.23+
  - Handle the deprecated BSON type 'Undefined' (very rare case)
