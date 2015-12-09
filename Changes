@@ -1,3 +1,6 @@
+1.24  TBA
+ - Small optimization in ObjectID generation
+
 1.23  2015-11-12
  - Fix a nasty bug where Mango would not finish to authenticate to the
    server before sending the first request, resulting in an authentication

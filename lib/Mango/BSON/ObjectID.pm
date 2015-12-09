@@ -9,6 +9,9 @@ use Sys::Hostname 'hostname';
 # 3 byte machine identifier
 my $MACHINE = substr md5_bytes(hostname), 0, 3;
 
+# 2 byte process id
+my $PID = pack('n', $$ % 0xffff);
+
 # Global counter
 my $COUNTER = int(rand(0xffffff));
 
@@ -19,8 +22,8 @@ sub from_epoch {
 }
 
 sub new {
-  my $class = shift;
-  return $class->SUPER::new unless defined(my $oid = shift);
+  my ($class, $oid) = @_;
+  return $class->SUPER::new unless defined $oid;
   croak qq{Invalid object id "$oid"} if $oid !~ /^[0-9a-fA-F]{24}\z/;
   return $class->SUPER::new(oid => pack('H*', $oid));
 }
@@ -33,12 +36,12 @@ sub to_string { unpack 'H*', shift->to_bytes }
 
 sub _generate {
 
-  # 4 byte time, 3 byte machine identifier and 2 byte process id
-  my $oid = pack('N', shift // time) . $MACHINE . pack('n', $$ % 0xffff);
-
-  # 3 byte counter
   $COUNTER = ($COUNTER + 1) % 0xffffff;
-  return $oid . substr pack('V', $COUNTER), 0, 3;
+
+  return pack('N', shift // time)        # 4 byte time
+    . $MACHINE                           # 3 byte machine identifier
+    . $PID                               # 2 byte process id
+    . substr pack('V', $COUNTER), 0, 3;  # 3 byte counter
 }
 
 1;
