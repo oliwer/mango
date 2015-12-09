@@ -171,7 +171,16 @@ sub rename {
 
   my $cmd = bson_doc renameCollection => $oldname, to => $newname;
 
-  $self->_command($cmd, $cb, sub { $self->db->collection($name) });
+  # Non-blocking
+  return $admin->command($cmd, sub {
+    my ($admin_db, $err, $doc) = @_;
+    my $newcol = $doc->{ok} ? $self->db->collection($name) : undef;
+    return $cb->($self, $err, $newcol);
+  }) if $cb;
+
+  # Blocking
+  my $doc = $admin->command($cmd);
+  return $doc->{ok} ? $self->db->collection($name) : undef;
 }
 
 sub save {
