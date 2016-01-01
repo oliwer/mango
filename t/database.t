@@ -124,6 +124,6 @@ $mango->db->command(
 );
 Mojo::IOLoop->start;
 Mojo::IOLoop->remove($id);
-like $fail, qr/Connect timeout/, 'right error';
+like $fail, qr/timeout|Premature/, 'right error';
 
 done_testing();

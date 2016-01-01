@@ -554,7 +554,7 @@ $mango->db->collection('collection_test')->remove(
 );
 Mojo::IOLoop->start;
 Mojo::IOLoop->remove($id);
-like $fail, qr/Connect timeout/, 'right error';
+like $fail, qr/timeout|Premature/, 'right error';
 ok !$result->{n}, 'remove was not successful';
 
 done_testing();

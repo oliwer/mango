@@ -3,6 +3,7 @@
  - Fix Collection::rename (bug #12 - thanks Isage)
  - Change 'insert' behavior to avoid modifying the original document
    during serialization. The documentation has also been updated. (#11)
+ - Fix 2 tests which failed with newer versions of Mojolicious.
 
 1.23  2015-11-12
  - Fix a nasty bug where Mango would not finish to authenticate to the
