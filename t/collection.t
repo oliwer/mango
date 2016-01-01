@@ -29,11 +29,17 @@ is $collection->build_index_name(bson_doc(foo => 1, bar => -1, baz => '2d')),
   'foo_bar_baz', 'right index name';
 
 # Insert documents blocking
-my $oids = $collection->insert([{foo => 'bar'}, {foo => 'baz'}]);
+my $doc1 = { foo => 'bar' };
+my $doc2 = { foo => 'baz' };
+my $oids = $collection->insert([$doc1, $doc2]);
 isa_ok $oids->[0], 'Mango::BSON::ObjectID', 'right class';
 isa_ok $oids->[1], 'Mango::BSON::ObjectID', 'right class';
 is $collection->find_one($oids->[0])->{foo}, 'bar', 'right value';
 is $collection->find_one($oids->[1])->{foo}, 'baz', 'right value';
+
+# Make sure the documents are not modified after insertion
+is $doc1->{_id}, undef, 'document not modified';
+is $doc2->{_id}, undef, 'document not modified';
 
 # Get collection statistics blocking
 is $collection->stats->{count}, 2, 'right number of documents';

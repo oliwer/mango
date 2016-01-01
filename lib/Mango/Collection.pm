@@ -105,15 +105,16 @@ sub index_information {
 }
 
 sub insert {
-  my ($self, $docs) = @_;
-  $docs = [$docs] unless ref $docs eq 'ARRAY';
-  my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
+  my ($self, $orig_docs, $cb) = @_;
+  $orig_docs = [$orig_docs] unless ref $orig_docs eq 'ARRAY';
 
-  # Make sure all documents have ids
-  my @ids = map { $_->{_id} //= bson_oid } @$docs;
+  # Make a shallow copy of the documents and add an id if needed
+  my @docs = map { { %$_ } } @$orig_docs;
+  my @ids = map { $_->{_id} //= bson_oid } @docs;
+
   my $command = bson_doc
     insert       => $self->name,
-    documents    => $docs,
+    documents    => \@docs,
     ordered      => \1,
     writeConcern => $self->db->build_write_concern;
 
@@ -481,6 +482,11 @@ to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+Note that C<insert> has to ensure each document has an C<_id> before sending
+them to MongoDB. To avoid modifying your data, it makes a copy of the
+documents. This can be a bit slow if you are sending big objects like
+pictures. To avoid that, consider using C<save> instead.
+
 =head2 map_reduce
 
   my $collection = $collection->map_reduce($map, $reduce, {out => 'foo'});
@@ -558,8 +564,8 @@ also append a callback to perform operation non-blocking.
 
   my $oid = $collection->save({foo => 'bar'});
 
-Save document to collection. You can also append a callback to perform
-operation non-blocking.
+Save document to collection. The document MUST have an C<_id>. You can also
+append a callback to perform operation non-blocking.
 
   $collection->save({foo => 'bar'} => sub {
     my ($collection, $err, $oid) = @_;

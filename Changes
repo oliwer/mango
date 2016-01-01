@@ -1,6 +1,8 @@
-1.24  TBA
+1.24  2016-01-01
  - Small optimization in ObjectID generation
  - Fix Collection::rename (bug #12 - thanks Isage)
+ - Change 'insert' behavior to avoid modifying the original document
+   during serialization. The documentation has also been updated. (#11)
 
 1.23  2015-11-12
  - Fix a nasty bug where Mango would not finish to authenticate to the
