@@ -12,6 +12,7 @@ sub TO_BSON { {something => shift->something} }
 
 package main;
 use Mojo::Base -strict;
+no warnings 'portable';  # Mango works on 64bits systems only
 
 use Test::More;
 use Mango::BSON ':bson';
