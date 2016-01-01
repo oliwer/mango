@@ -28,7 +28,7 @@ has w => 1;
 # is good for security.
 Hash::Util::FieldHash::fieldhash my %AUTH;
 
-our $VERSION = '1.23';
+our $VERSION = '1.24';
 
 sub DESTROY { shift->_cleanup }
 
@@ -385,6 +385,8 @@ For MongoDB 2.6 support, use L<Mango> 1.16.
 To learn more about MongoDB you should take a look at the
 L<official documentation|http://docs.mongodb.org>, the documentation included
 in this distribution is no replacement for it.
+
+Look at L<Mango::Collection> for CRUD operations.
 
 Many arguments passed to methods as well as values of attributes get
 serialized to BSON with L<Mango::BSON>, which provides many helper functions
