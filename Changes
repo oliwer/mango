@@ -1,3 +1,7 @@
+1.25  2016-02-16
+ - Make Mango fork-safe again by fixing ObjectID generation which
+   I broke in the last update. Thanks to Andrey Khozov.
+
 1.24  2016-01-01
  - Small optimization in ObjectID generation
  - Fix Collection::rename (bug #12 - thanks Isage)
