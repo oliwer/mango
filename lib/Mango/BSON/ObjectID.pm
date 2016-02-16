@@ -9,9 +9,6 @@ use Sys::Hostname 'hostname';
 # 3 byte machine identifier
 my $MACHINE = substr md5_bytes(hostname), 0, 3;
 
-# 2 byte process id
-my $PID = pack('n', $$ % 0xffff);
-
 # Global counter
 my $COUNTER = int(rand(0xffffff));
 
@@ -40,7 +37,7 @@ sub _generate {
 
   return pack('N', shift // time)        # 4 byte time
     . $MACHINE                           # 3 byte machine identifier
-    . $PID                               # 2 byte process id
+    . pack('n', $$ % 0xffff)             # 2 byte process id
     . substr pack('V', $COUNTER), 0, 3;  # 3 byte counter
 }
 
