@@ -212,9 +212,13 @@ sub _decode_value {
     if $type eq DATETIME;
 
   # Regex
-  return eval join '/', 'qr', _decode_cstring($bsonref),
-    _decode_cstring($bsonref)
-    if $type eq REGEX;
+  if ($type eq REGEX) {
+    my ($p, $m) = (_decode_cstring($bsonref), _decode_cstring($bsonref));
+    croak "invalid regex modifier(s) in 'qr/$p/$m'"
+      if length($m) and $m !~ /^[msixpadlun]+\z/;
+    # escape $pat to avoid code injection
+    return eval "qr/\$p/$m";
+  }
 
   # Binary (with subtypes)
   return _decode_binary($bsonref) if $type eq BINARY;

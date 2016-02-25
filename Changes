@@ -1,3 +1,6 @@
+1.26  2016-02-25
+ - Fix potential code injection when deserializing regex
+
 1.25  2016-02-16
  - Make Mango fork-safe again by fixing ObjectID generation which
    I broke in the last update. Thanks to Andrey Khozov.
