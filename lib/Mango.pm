@@ -235,10 +235,11 @@ sub _next {
   push @{$self->{queue} ||= []}, $op if $op;
   my $connections = $self->{connections};
   my $start;
-  $self->_write($_) and $start++ for my @ids = keys %$connections;
+  $self->_write($_) and $start++ for keys %$connections;
 
   # Check if we need a blocking connection
   return unless $op;
+  my @ids = keys %$connections;
   return $self->_connect(0)
     if !$op->{nb} && !grep { !$connections->{$_}{nb} } @ids;
 
