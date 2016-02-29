@@ -1,3 +1,9 @@
+1.27  2016-02-29
+ - Fix a reconnection error where Mango was trying to use an old
+   connection after a shutdown. Thanks to fortl.
+ - Fix a small bug in Mango::Bulk where connection errors would be
+   ignored resulting in a wrong error message. (#14)
+
 1.26  2016-02-25
  - Fix potential code injection when deserializing regex
 
