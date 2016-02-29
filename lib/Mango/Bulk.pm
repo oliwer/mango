@@ -99,7 +99,7 @@ sub _next {
     $command => sub {
       my ($db, $err, $result) = @_;
 
-      _merge($type, $offset, $full, $result);
+      _merge($type, $offset, $full, $result) unless $err;
       $err ||= $self->collection->db->mango->protocol->write_error($full);
       return $self->$cb($err, $full) if $err;
 
