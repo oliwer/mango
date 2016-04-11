@@ -17,7 +17,7 @@ no warnings 'portable';  # Mango works on 64bits systems only
 use Test::More;
 use Mango::BSON ':bson';
 use Mojo::ByteStream 'b';
-use Mojo::JSON 'encode_json';
+use Mojo::JSON qw(encode_json decode_json);
 use Scalar::Util 'dualvar';
 
 # Ordered document
@@ -496,9 +496,11 @@ is encode_json({bin => bson_bin('Hello World!')}),
   '{"bin":"SGVsbG8gV29ybGQh"}', 'right JSON';
 
 # DBRef to JSON
-is encode_json(
-  {dbref => bson_dbref('test', bson_oid('525139d85867b45714020000'))}),
-  '{"dbref":{"$ref":"test","$id":"525139d85867b45714020000"}}', 'right JSON';
+my $json = encode_json(
+  {dbref => bson_dbref('test', bson_oid('525139d85867b45714020000'))} );
+$json = decode_json($json);
+is $json->{dbref}{'$ref'}, 'test', 'dbref $ref in JSON';
+is $json->{dbref}{'$id'}, '525139d85867b45714020000', 'dbref $id in JSON';
 
 # Validate object id
 is bson_oid('123456789012345678abcdef'), '123456789012345678abcdef',
