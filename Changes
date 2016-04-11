@@ -1,3 +1,7 @@
+1.28  2016-04-11
+ - Fix a BSON to JSON encoding test case failure due to changes in
+   Mojolicious 6.58. (#16)
+
 1.27  2016-02-29
  - Fix a reconnection error where Mango was trying to use an old
    connection after a shutdown. Thanks to fortl.
