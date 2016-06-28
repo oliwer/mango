@@ -76,7 +76,7 @@ sub find_and_modify {
 
 sub find_one {
   my ($self, $query) = (shift, shift);
-  $query = {_id => $query} if ref $query eq 'Mango::BSON::ObjectID';
+  $query = {_id => $query} if ref $query ne 'HASH';
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
 
   # Non-blocking
@@ -152,7 +152,7 @@ sub remove {
   my $flags = shift // {};
 
   ($query, $flags) = ({_id => $query}, {single => 1})
-    if ref $query eq 'Mango::BSON::ObjectID';
+    if ref $query ne 'HASH';
   my $command = bson_doc
     delete       => $self->name,
     deletes      => [{q => $query, limit => $flags->{single} ? 1 : 0}],
@@ -208,7 +208,7 @@ sub update {
   my $flags = shift // {};
 
   $update = {
-    q => ref $query eq 'Mango::BSON::ObjectID' ? {_id => $query} : $query,
+    q => ref $query eq 'HASH' ?  $query : {_id => $query},
     u => $update,
     upsert => $flags->{upsert} ? \1 : \0,
     multi  => $flags->{multi}  ? \1 : \0
