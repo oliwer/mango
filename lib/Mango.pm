@@ -330,24 +330,28 @@ Mango - Pure-Perl non-blocking I/O MongoDB driver
 
   use Mango;
 
+  # Declare a Mango helper
+  sub mango { state $m = Mango->new('mongodb://localhost:27017') }
+  # or in a Mojolicious::Lite app
+  helper mango => sub { state $m = Mango->new('mongodb://localhost:27017') };
+
   # Insert document
-  my $mango = Mango->new('mongodb://localhost:27017');
-  my $oid   = $mango->db('test')->collection('foo')->insert({bar => 'baz'});
+  my $oid   = mango->db('test')->collection('foo')->insert({bar => 'baz'});
 
   # Find document
-  my $doc = $mango->db('test')->collection('foo')->find_one({bar => 'baz'});
+  my $doc = mango->db('test')->collection('foo')->find_one({bar => 'baz'});
   say $doc->{bar};
 
   # Update document
-  $mango->db('test')->collection('foo')
+  mango->db('test')->collection('foo')
     ->update({bar => 'baz'}, {bar => 'yada'});
 
   # Remove document
-  $mango->db('test')->collection('foo')->remove({bar => 'yada'});
+  mango->db('test')->collection('foo')->remove({bar => 'yada'});
 
   # Insert document with special BSON types
   use Mango::BSON ':bson';
-  my $oid = $mango->db('test')->collection('foo')
+  my $oid = mango->db('test')->collection('foo')
     ->insert({data => bson_bin("\x00\x01"), now => bson_time});
 
   # Non-blocking concurrent find
@@ -357,7 +361,7 @@ Mango - Pure-Perl non-blocking I/O MongoDB driver
   });
   for my $name (qw(sri marty)) {
     my $end = $delay->begin(0);
-    $mango->db('test')->collection('users')->find({name => $name})->all(sub {
+    mango->db('test')->collection('users')->find({name => $name})->all(sub {
       my ($cursor, $err, $docs) = @_;
       $end->(@$docs);
     });
@@ -368,7 +372,7 @@ Mango - Pure-Perl non-blocking I/O MongoDB driver
   use EV;
   use AnyEvent;
   my $cv = AE::cv;
-  $mango->db('test')->command(buildInfo => sub {
+  mango->db('test')->command(buildInfo => sub {
     my ($db, $err, $doc) = @_;
     $cv->send($doc->{version});
   });
@@ -563,6 +567,12 @@ perform operation non-blocking.
 
 Construct a new L<Mango> object and parse connection string with
 L</"from_string"> if necessary.
+
+Not that is is B<strongly> recommended to build your Mango object inside
+a helper function like shown in the synopsis. This is because the Mango's
+object reference inside L<Mango::Database> objects is weakened to avoid
+memory leaks. This means your Mango instance is quickly going to get
+undefined after you use the C<db> method. So, use a helper to prevent that.
 
 If a username and password are provided, Mango will try to authenticate using
 SCRAM-SHA1. B<Warning:> this will require L<Authen::SCRAM> which is not
