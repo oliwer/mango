@@ -109,7 +109,7 @@ sub insert {
   $orig_docs = [$orig_docs] unless ref $orig_docs eq 'ARRAY';
 
   # Make a shallow copy of the documents and add an id if needed
-  my @docs = map { { %$_ } } @$orig_docs;
+  my @docs = map { bson_doc %$_ } @$orig_docs;
   my @ids = map { $_->{_id} //= bson_oid } @docs;
 
   my $command = bson_doc
