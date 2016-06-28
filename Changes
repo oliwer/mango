@@ -1,3 +1,8 @@
+1.29  2016-06-28
+ - Keep document's members order when doing an insert (thanks Stefan)
+ - Improve Mango->new documentation to explain why you need to use a
+   helper sub (#17)
+
 1.28  2016-04-11
  - Fix a BSON to JSON encoding test case failure due to changes in
    Mojolicious 6.58. (#16)
