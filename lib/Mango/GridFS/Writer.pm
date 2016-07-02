@@ -3,7 +3,7 @@ use Mojo::Base -base;
 
 use Carp 'croak';
 use List::Util 'first';
-use Mango::BSON qw(bson_bin bson_doc bson_oid bson_time);
+use Mango::BSON qw(bson_bytes bson_doc bson_oid bson_time);
 use Mojo::IOLoop;
 
 has chunk_size => 261120;
@@ -91,7 +91,7 @@ sub _chunk {
 
   my $n = $self->{n}++;
   return $bulk->insert(
-    {files_id => $self->_files_id, n => $n, data => bson_bin($chunk)});
+    {files_id => $self->_files_id, n => $n, data => bson_bytes($chunk)});
 }
 
 sub _files_id { shift->{files_id} //= bson_oid }

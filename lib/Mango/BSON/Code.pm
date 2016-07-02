@@ -3,6 +3,8 @@ use Mojo::Base -base;
 
 has [qw(code scope)];
 
+sub length { CORE::length(shift->code) }
+
 1;
 
 =encoding utf8
@@ -42,7 +44,12 @@ Scope.
 
 =head1 METHODS
 
-L<Mango::BSON::Code> inherits all methods from L<Mojo::Base>.
+L<Mango::BSON::Code> inherits all methods from L<Mojo::Base> and implements
+the following new ones.
+
+=head2 length
+
+Returns the length of the C<code> attribute.
 
 =head1 SEE ALSO
 

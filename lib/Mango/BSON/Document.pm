@@ -48,6 +48,8 @@ Mango::BSON::Document - Document type
 
 =head1 DESCRIPTION
 
+Do not expect this class to be a Tie::Hash in the future!
+
 L<Mango::BSON::Document> is a container for the BSON document type used by
 L<Mango::BSON>.
 

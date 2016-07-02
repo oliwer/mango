@@ -84,6 +84,9 @@ Mango::BSON::Number - Numerical types
 
 =head1 DESCRIPTION
 
+Do not use this class directly in your code! Use the functions provided
+in L<Mango::BSON> instead.
+
 L<Mango::BSON::Number> is a container for numerical values with a strict
 type.
 

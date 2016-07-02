@@ -1,9 +1,9 @@
 package Mango::BSON::ObjectID;
 use Mojo::Base -base;
-use overload bool => sub {1}, '""' => sub { shift->to_string }, fallback => 1;
+use overload bool => sub {1}, '""' => sub { shift->hex }, fallback => 1;
 
 use Carp 'croak';
-use Mojo::Util 'md5_bytes';
+use Mojo::Util qw(deprecated md5_bytes);
 use Sys::Hostname 'hostname';
 
 # 3 byte machine identifier
@@ -12,24 +12,50 @@ my $MACHINE = substr md5_bytes(hostname), 0, 3;
 # Global counter
 my $COUNTER = int(rand(0xffffff));
 
+sub TO_JSON { shift->hex }
+
 sub from_epoch {
+  deprecated "from_epoch is DEPRECATED. Do not use the OID to store a date!"
+    unless $ENV{TAP_VERSION};
   my ($self, $epoch) = @_;
   $self->{oid} = _generate($epoch);
   return $self;
 }
 
+sub get_time { unpack 'N', substr(shift->oid, 0, 4) }
+
+sub hex { unpack 'H*', shift->oid }
+
 sub new {
   my ($class, $oid) = @_;
+
+  # Make sure people are using bson_oid
+  if ( (caller)[0] !~ /^Mango::/ ) {
+    warn "You should never use the Mango::BSON::ObjectID constructor ".
+         "directly. Use bson_oid from Mango::BSON instead.";
+  }
+
   return $class->SUPER::new unless defined $oid;
   croak qq{Invalid object id "$oid"} if $oid !~ /^[0-9a-fA-F]{24}\z/;
   return $class->SUPER::new(oid => pack('H*', $oid));
 }
 
-sub to_bytes { shift->{oid} //= _generate() }
+sub oid { shift->{oid} //= _generate() }
 
-sub to_epoch { unpack 'N', substr(shift->to_bytes, 0, 4) }
+sub to_bytes {
+  deprecated "to_bytes is DEPRECATED in favor of oid";
+  return shift->oid;
+}
 
-sub to_string { unpack 'H*', shift->to_bytes }
+sub to_epoch {
+  deprecated "to_epoch is DEPRECATED in favor of get_time";
+  return shift->get_time;
+}
+
+sub to_string {
+  deprecated "to_string is DEPRECATED in favor of hex";
+  return shift->hex;
+}
 
 sub _generate {
 
@@ -70,7 +96,23 @@ implements the following new ones.
 
   my $oid = $oid->from_epoch(1359840145);
 
+This method is DEPRECATED. And there is no replacement. Using the OID to
+store a date is a bad practice and has been removed from all MongoDB
+drivers. Use a proper BSON::Time instead.
+
 Generate new object id with specific epoch time.
+
+=head2 get_time
+
+  my $epoch = $oid->get_time;
+
+Extract epoch seconds from the object id.
+
+=head2 hex
+
+  my $oid_string = $oid->hex;
+
+Stringify the object id as a string in hexadecimal.
 
 =head2 new
 
@@ -79,9 +121,23 @@ Generate new object id with specific epoch time.
 
 Construct a new L<Mango::BSON::ObjectID> object.
 
+=head2 oid
+
+  my $binray = $oid->oid;
+
+Return the object id in binary form.
+
+=head2 TO_JSON
+
+  my $oid_string = $oid->TO_JSON;
+
+Returns a hexadecimal string. Same as method L</"hex">.
+
 =head2 to_bytes
 
   my $bytes = $oid->to_bytes;
+
+This method is DEPRECATED. Use L</oid> instead.
 
 Object id in binary form.
 
@@ -89,11 +145,15 @@ Object id in binary form.
 
   my $epoch = $oid->to_epoch;
 
+This method is DEPRECATED. Use L</get_time> instead.
+
 Extract epoch seconds from object id.
 
 =head2 to_string
 
   my $str = $oid->to_string;
+
+This method is DEPRECATED. Use L</hex> instead.
 
 Stringify object id.
 
@@ -111,7 +171,7 @@ Always true.
 
   my $str = "$oid";
 
-Alias for L</to_string>.
+Alias for L</hex>.
 
 =head1 SEE ALSO
 

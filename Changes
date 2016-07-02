@@ -1,3 +1,50 @@
+1.30  TBD
+ Mango is migrating to the official BSON module to perform its
+ serialization work. BSON will actually replace Mango::BSON in
+ version 2.00. This release is here to help you adjust to the
+ required API changes.
+
+ BREAKING CHANGES
+  - Mango::BSON::Time::TO_JSON now returns a string formated as iso8601
+    instead of an epoch. Check your REST services!
+    Use $time->value to get the epoch in milliseconds.
+  - Mango::BSON::Time stringification omits the milliseconds.
+  - The arguments of Mango::BSON::bson_dbref have been reversed. The
+    function will try to reverse them for you but it may not work in
+    all cases.
+
+ - Deprecated Mango::BSON::Time::to_datetime
+ - Deprecated Mango::BSON::Time::to_epoch
+ - Deprecated Mango::BSON::Time::to_string
+ - Added Mango::BSON::Time::as_iso8601
+ - Added Mango::BSON::Time::epoch
+ - Added Mango::BSON::Time::value
+
+ - Added Mango::BSON::Binary::sybtype as an alias of type
+ - Added Mango::BSON::Code::length
+
+ - Deprecated Mango::BSON::ObjectID::from_epoch !!!
+ - Deprecated Mango::BSON::ObjectID::to_bytes
+ - Deprecated Mango::BSON::ObjectID::to_epoch
+ - Deprecated Mango::BSON::ObjectID::to_string
+ - Added Mango::BSON::ObjectID::TO_JSON
+ - Added Mango::BSON::ObjectID::get_time
+ - Added Mango::BSON::ObjectID::hex
+ - Added Mango::BSON::ObjectID::oid
+
+ - Deprecated Mango::BSON::bson_bin
+ - Deprecated Mango::BSON::bson_length
+ - Deprecated Mango::BSON::bson_max
+ - Deprecated Mango::BSON::bson_min
+ - Deprecated Mango::BSON::bson_ts
+ - Deprecated Mango::BSON::encode_cstring
+ - Added Mango::BSON::bson_bytes
+ - Added Mango::BSON::bson_maxkey
+ - Added Mango::BSON::bson_minkey
+ - Added Mango::BSON::bson_timestamp
+
+ Most of the deprecated methods will disappear in version 2.00!
+
 1.29  2016-06-28
  - Keep document's members order when doing an insert (thanks Stefan)
  - Improve Mango->new documentation to explain why you need to use a

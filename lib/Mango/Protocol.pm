@@ -1,7 +1,7 @@
 package Mango::Protocol;
 use Mojo::Base -base;
 
-use Mango::BSON qw(bson_decode bson_encode bson_length encode_cstring);
+use Mango::BSON qw(bson_decode bson_encode);
 
 # Opcodes
 use constant {REPLY => 1, QUERY => 2004, GET_MORE => 2005,
@@ -11,7 +11,7 @@ sub build_get_more {
   my ($self, $id, $name, $return, $cursor) = @_;
 
   # Zero and name
-  my $msg = pack('l<', 0) . encode_cstring($name);
+  my $msg = pack('l<', 0) . _encode_cstring($name);
 
   # Number to return and cursor id
   $msg .= pack('l<', $return) . pack('q<', $cursor);
@@ -47,7 +47,7 @@ sub build_query {
   my $msg = pack 'l<', unpack('V', $vec);
 
   # Name
-  $msg .= encode_cstring $name;
+  $msg .= _encode_cstring($name);
 
   # Skip and number to return
   $msg .= pack('l<', $skip) . pack('l<', $return);
@@ -73,7 +73,7 @@ sub parse_reply {
   my ($self, $bufref) = @_;
 
   # Make sure we have the whole message
-  return undef unless my $len = bson_length $$bufref;
+  return undef unless my $len = _bson_length($$bufref);
   return undef if length $$bufref < $len;
   my $msg = substr $$bufref, 0, $len, '';
   substr $msg, 0, 4, '';
@@ -100,7 +100,7 @@ sub parse_reply {
   # Documents (remove number of documents prefix)
   substr $msg, 0, 4, '';
   my @docs;
-  push @docs, bson_decode(substr $msg, 0, bson_length($msg), '') while $msg;
+  push @docs, bson_decode(substr $msg, 0, _bson_length($msg), '') while $msg;
 
   return {
     id     => $id,
@@ -125,9 +125,17 @@ sub write_error {
     map {"Write error at index $_->{index}: $_->{errmsg}"} @$errors;
 }
 
+sub _bson_length { length $_[0] < 4 ? undef : unpack 'l<', substr($_[0], 0, 4) }
+
 sub _build_header {
   my ($id, $length, $op) = @_;
   return join '', map { pack 'l<', $_ } $length + 16, $id, 0, $op;
+}
+
+sub _encode_cstring {
+  my $str = shift;
+  utf8::encode $str;
+  pack 'Z*', $str;
 }
 
 1;

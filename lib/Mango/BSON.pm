@@ -2,7 +2,7 @@ package Mango::BSON;
 use Mojo::Base -strict;
 
 use re 'regexp_pattern';
-use Carp 'croak';
+use Carp qw(carp croak);
 use Exporter 'import';
 use Mango::BSON::Binary;
 use Mango::BSON::Code;
@@ -12,12 +12,14 @@ use Mango::BSON::ObjectID;
 use Mango::BSON::Time;
 use Mango::BSON::Timestamp;
 use Mojo::JSON;
+use Mojo::Util 'deprecated';
 use Scalar::Util 'blessed';
 
-my @BSON = (
-  qw(bson_bin bson_code bson_dbref bson_decode bson_doc bson_double),
-  qw(bson_encode bson_false bson_int32 bson_int64 bson_length bson_max),
-  qw(bson_min bson_oid bson_raw bson_time bson_true bson_ts)
+my @BSON = qw(
+  bson_bin bson_bytes bson_code bson_dbref bson_decode bson_doc
+  bson_double bson_encode bson_false bson_int32 bson_int64
+  bson_length bson_max bson_maxkey bson_min bson_minkey bson_oid
+  bson_raw bson_time bson_true bson_ts bson_timestamp
 );
 our @EXPORT_OK = (@BSON, 'encode_cstring');
 our %EXPORT_TAGS = (bson => \@BSON);
@@ -68,11 +70,27 @@ my $BOOL  = blessed $TRUE;
 my $MAXKEY = bless {}, 'Mango::BSON::_MaxKey';
 my $MINKEY = bless {}, 'Mango::BSON::_MinKey';
 
-sub bson_bin { Mango::BSON::Binary->new(data => shift) }
+sub bson_bin {
+  deprecated "bson_bin is DEPRECATED in favor of bson_bytes";
+  return bson_bytes(@_);
+}
+
+sub bson_bytes { Mango::BSON::Binary->new(data => shift) }
 
 sub bson_code { Mango::BSON::Code->new(code => shift) }
 
-sub bson_dbref { bson_doc('$ref' => shift, '$id' => shift) }
+sub bson_dbref {
+  my ($id, $ref) = @_;
+
+  # Check if the arguments are in the right order
+  unless ($id =~ /^[a-zA-Z0-9]{24}\z/) {
+    carp "The order of the arguments of bson_dbref() has changed ".
+         "in Mango 1.30+. Please correct this.";
+    ($ref, $id) = ($id, $ref);
+  }
+
+  return bson_doc('$ref' => $ref, '$id' => $id);
+}
 
 sub bson_decode {
   my $bson = shift;
@@ -106,11 +124,24 @@ sub bson_int32 { Mango::BSON::Number->new(shift, INT32) }
 
 sub bson_int64 { Mango::BSON::Number->new(shift, INT64) }
 
-sub bson_length { length $_[0] < 4 ? undef : unpack 'l<', substr($_[0], 0, 4) }
+sub bson_length {
+  # This sub will be removed in v2.00
+  length $_[0] < 4 ? undef : unpack 'l<', substr($_[0], 0, 4);
+}
 
-sub bson_max {$MAXKEY}
+sub bson_max {
+  deprecated "bson_max is DEPRECATED in favor of bson_maxkey";
+  return $MAXKEY;
+}
 
-sub bson_min {$MINKEY}
+sub bson_maxkey { $MAXKEY }
+
+sub bson_min {
+  deprecated "bson_min is DEPRECATED in favor of bson_minkey";
+  return $MINKEY;
+}
+
+sub bson_minkey { $MINKEY }
 
 sub bson_oid { Mango::BSON::ObjectID->new(@_) }
 
@@ -118,13 +149,19 @@ sub bson_raw { bson_doc('$bson' => shift) }
 
 sub bson_time { Mango::BSON::Time->new(@_) }
 
-sub bson_ts {
+sub bson_timestamp {
   Mango::BSON::Timestamp->new(seconds => shift, increment => shift);
+}
+
+sub bson_ts {
+  deprecated "bson_ts is DEPRECATED in favor of bson_timestamp";
+  return bson_timestamp(@_);
 }
 
 sub bson_true {$TRUE}
 
 sub encode_cstring {
+  # This sub will be removed in v2.00
   my $str = shift;
   utf8::encode $str;
   return pack 'Z*', $str;
@@ -137,12 +174,12 @@ sub _decode_binary {
   my $subtype = substr $$bsonref, 0, 1, '';
   my $binary = substr $$bsonref, 0, $len, '';
 
-  return bson_bin($binary)->type('function') if $subtype eq BINARY_FUNCTION;
-  return bson_bin($binary)->type('md5')      if $subtype eq BINARY_MD5;
-  return bson_bin($binary)->type('uuid')     if $subtype eq BINARY_UUID;
-  return bson_bin($binary)->type('user_defined')
+  return bson_bytes($binary)->subtype('function') if $subtype eq BINARY_FUNCTION;
+  return bson_bytes($binary)->subtype('md5')      if $subtype eq BINARY_MD5;
+  return bson_bytes($binary)->subtype('uuid')     if $subtype eq BINARY_UUID;
+  return bson_bytes($binary)->subtype('user_defined')
     if $subtype eq BINARY_USER_DEFINED;
-  return bson_bin($binary)->type('generic');
+  return bson_bytes($binary)->subtype('generic');
 }
 
 sub _decode_cstring {
@@ -224,8 +261,8 @@ sub _decode_value {
   return _decode_binary($bsonref) if $type eq BINARY;
 
   # Min/Max
-  return bson_min() if $type eq MIN_KEY;
-  return bson_max() if $type eq MAX_KEY;
+  return bson_minkey() if $type eq MIN_KEY;
+  return bson_maxkey() if $type eq MAX_KEY;
 
   # Code (with and without scope)
   return bson_code(_decode_string($bsonref)) if $type eq CODE;
@@ -235,7 +272,7 @@ sub _decode_value {
   }
 
   # Timestamp
-  return bson_ts(
+  return bson_timestamp(
     reverse map({ unpack 'l<', substr($$_, 0, 4, '') } $bsonref, $bsonref))
     if $type eq TIMESTAMP;
 
@@ -256,14 +293,15 @@ sub _encode_object {
   my ($e, $value, $class) = @_;
 
   # ObjectID
-  return OBJECT_ID . $e . $value->to_bytes
+  return OBJECT_ID . $e . $value->oid
     if $class eq 'Mango::BSON::ObjectID';
 
   # Boolean
   return BOOL . $e . ($value ? "\x01" : "\x00") if $class eq $BOOL;
 
   # Time
-  return DATETIME . $e . pack('q<', $value) if $class eq 'Mango::BSON::Time';
+  return DATETIME . $e . pack('q<', $value->{time})
+    if $class eq 'Mango::BSON::Time';
 
   # Max
   return MAX_KEY . $e if $value eq $MAXKEY;
@@ -404,22 +442,26 @@ individually or at once with the C<:bson> flag.
 
 =head2 bson_bin
 
-  my $bin = bson_bin $bytes;
+This function is DEPRECATED. Use L</bson_bytes> instead.
+
+head2 bson_bytes
+
+  my $bin = bson_bytes $bytes;
 
 Create new BSON element of the binary type with L<Mango::BSON::Binary>,
 defaults to the C<generic> binary subtype.
 
   # Function
-  bson_bin($bytes)->type('function');
+  bson_bytes($bytes)->subtype('function');
 
   # MD5
-  bson_bin($bytes)->type('md5');
+  bson_bytes($bytes)->subtype('md5');
 
   # UUID
-  bson_bin($bytes)->type('uuid');
+  bson_bytes($bytes)->subtype('uuid');
 
   # User defined
-  bson_bin($bytes)->type('user_defined');
+  bson_bytes($bytes)->subtype('user_defined');
 
 =head2 bson_code
 
@@ -432,9 +474,12 @@ Create new BSON element of the code type with L<Mango::BSON::Code>.
 
 =head2 bson_dbref
 
-  my $dbref = bson_dbref 'test', $oid;
+  my $dbref = bson_dbref $oid, 'test';
 
 Create a new database reference.
+
+WARNING: the order of the arguments has been switched in version 1.30.
+The oid comes first now.
 
   # Longer version
   my $dbref = {'$ref' => 'test', '$id' => $oid};
@@ -500,17 +545,27 @@ the value is incompatible with the int64 type.
 
   my $len = bson_length $bson;
 
+This function is DEPRECATED;
+
 Check BSON length prefix.
 
 =head2 bson_max
 
-  my $max_key = bson_max;
+This function is DEPRECATED. Use L</bson_maxkey> instead.
+
+=head2 bson_maxkey
+
+  my $max_key = bson_maxkey;
 
 Create new BSON element of the max key type.
 
 =head2 bson_min
 
-  my $min_key = bson_min;
+This function is DEPRECATED. Use L</bson_minkey> instead.
+
+=head2 bson_minkey
+
+  my $min_key = bson_minkey;
 
 Create new BSON element of the min key type.
 
@@ -558,15 +613,21 @@ defaults to milliseconds since the UNIX epoch.
 
 Create new BSON element of the boolean type true.
 
-=head2 bson_ts
+=head2 bson_timestamp
 
   my $timestamp = bson_ts 23, 24;
 
 Create new BSON element of the timestamp type with L<Mango::BSON::Timestamp>.
 
+=head2 bson_ts
+
+This function is DEPRECATED. Use L</bson_timestamp> instead.
+
 =head2 encode_cstring
 
   my $bytes = encode_cstring $cstring;
+
+This function is DEPRECATED.
 
 Encode cstring.
 

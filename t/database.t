@@ -81,7 +81,7 @@ $collection->drop;
 
 # Dereference blocking
 my $oid = $collection->insert({test => 23});
-is $db->dereference(bson_dbref('database_test', $oid))->{test}, 23,
+is $db->dereference(bson_dbref($oid, 'database_test'))->{test}, 23,
   'right result';
 $collection->drop;
 
@@ -89,7 +89,7 @@ $collection->drop;
 $oid = $collection->insert({test => 23});
 ($fail, $result) = ();
 $db->dereference(
-  bson_dbref('database_test', $oid) => sub {
+  bson_dbref($oid, 'database_test') => sub {
     my ($db, $err, $doc) = @_;
     $fail   = $err;
     $result = $doc;

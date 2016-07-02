@@ -30,7 +30,7 @@ is $reader->md5, 'fc3ff98e8c6a0d3087d515c0473f8677', 'right checksum';
 is_deeply $reader->metadata, {foo => 'bar'}, 'right structure';
 is $reader->size,       12,     'right size';
 is $reader->chunk_size, 261120, 'right chunk size';
-is length $reader->upload_date, length(time) + 3, 'right time format';
+is length $reader->upload_date, length(time), 'right time format';
 my $data;
 while (defined(my $chunk = $reader->read)) { $data .= $chunk }
 is $reader->tell, 12, 'right position';
@@ -101,7 +101,7 @@ is $reader->md5, 'fc3ff98e8c6a0d3087d515c0473f8677', 'right checksum';
 is_deeply $reader->metadata, {foo => 'bar'}, 'right structure';
 is $reader->size,       12, 'right size';
 is $reader->chunk_size, 4,  'right chunk size';
-is length $reader->upload_date, length(time) + 3, 'right time format';
+is length $reader->upload_date, length(time), 'right time format';
 ($fail, $data) = ();
 my $cb;
 $cb = sub {

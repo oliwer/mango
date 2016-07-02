@@ -44,19 +44,19 @@ is bson_length("\x05\x00\x00\x00\x00\x00"), 5,     'right length';
 
 # Generate object id
 is length bson_oid, 24, 'right length';
-is bson_oid('510d83915867b405b9000000')->to_epoch, 1359840145,
+is bson_oid('510d83915867b405b9000000')->get_time, 1359840145,
   'right epoch time';
 my $oid = bson_oid->from_epoch(1359840145);
-is $oid->to_epoch, 1359840145, 'right epoch time';
+is $oid->get_time, 1359840145, 'right epoch time';
 isnt $oid, bson_oid->from_epoch(1359840145), 'different object ids';
 
 # Generate Time
-is length bson_time, length(time) + 3, 'right length';
-is length int bson_time->to_epoch, length time, 'right length';
-is substr(bson_time->to_epoch, 0, 5), substr(time, 0, 5), 'same start';
-is bson_time(1360626536748), 1360626536748, 'right epoch milliseconds';
-is bson_time(1360626536748)->to_epoch, 1360626536.748, 'right epoch seconds';
-is bson_time(1360626536748)->to_datetime, '2013-02-11T23:48:56.748Z',
+is length bson_time, length(time), 'right length';
+is length int bson_time->epoch, length time, 'right length';
+is substr(bson_time->epoch, 0, 5), substr(time, 0, 5), 'same start';
+is bson_time(1360626536748), 1360626536, 'right epoch milliseconds';
+is bson_time(1360626536748)->epoch, 1360626536, 'right epoch seconds';
+is bson_time(1360626536748)->as_iso8601, '2013-02-11T23:48:56.748Z',
   'right format';
 
 # Empty document
@@ -240,13 +240,13 @@ is bson_encode($doc), $bytes, 'successful roundtrip';
 # Max key roundtrip
 $bytes = "\x0b\x00\x00\x00\x7f\x74\x65\x73\x74\x00\x00";
 $doc   = bson_decode($bytes);
-is_deeply $doc, {test => bson_max()}, 'right document';
+is_deeply $doc, {test => bson_maxkey()}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
 # Min key roundtrip
 $bytes = "\x0b\x00\x00\x00\xff\x74\x65\x73\x74\x00\x00";
 $doc   = bson_decode($bytes);
-is_deeply $doc, {test => bson_min()}, 'right document';
+is_deeply $doc, {test => bson_minkey()}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
 # Object id roundtrip
@@ -255,7 +255,7 @@ $bytes = "\x16\x00\x00\x00\x07\x6f\x69\x64\x00\x00"
   . "\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x00";
 $doc = bson_decode($bytes);
 isa_ok $doc->{oid}, 'Mango::BSON::ObjectID', 'right class';
-is $doc->{oid}->to_epoch, 66051, 'right epoch time';
+is $doc->{oid}->get_time, 66051, 'right epoch time';
 is_deeply $doc, {oid => $id}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
@@ -296,15 +296,15 @@ isa_ok $doc->{today}, 'Mango::BSON::Time', 'right class';
 is_deeply $doc, {today => bson_time(12345678)}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 is_deeply bson_decode(bson_encode({time => bson_time(1360627440269)})),
-  {time => 1360627440269}, 'successful roundtrip';
+  {time => 1360627440}, 'successful roundtrip';
 
 # Generic binary roundtrip
 $bytes = "\x14\x00\x00\x00\x05\x66\x6f\x6f\x00\x05\x00\x00\x00\x00\x31\x32\x33"
   . "\x34\x35\x00";
 $doc = bson_decode($bytes);
 isa_ok $doc->{foo}, 'Mango::BSON::Binary', 'right class';
-is $doc->{foo}->type, 'generic', 'right type';
-is_deeply $doc, {foo => bson_bin('12345')}, 'right document';
+is $doc->{foo}->subtype, 'generic', 'right type';
+is_deeply $doc, {foo => bson_bytes('12345')}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
 # Function binary roundtrip
@@ -312,8 +312,8 @@ $bytes = "\x14\x00\x00\x00\x05\x66\x6f\x6f\x00\x05\x00\x00\x00\x01\x31\x32\x33"
   . "\x34\x35\x00";
 $doc = bson_decode($bytes);
 isa_ok $doc->{foo}, 'Mango::BSON::Binary', 'right class';
-is $doc->{foo}->type, 'function', 'right type';
-is_deeply $doc, {foo => bson_bin('12345')->type('function')}, 'right document';
+is $doc->{foo}->subtype, 'function', 'right type';
+is_deeply $doc, {foo => bson_bytes('12345')->type('function')}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
 # MD5 binary roundtrip
@@ -321,8 +321,8 @@ $bytes = "\x14\x00\x00\x00\x05\x66\x6f\x6f\x00\x05\x00\x00\x00\x05\x31\x32\x33"
   . "\x34\x35\x00";
 $doc = bson_decode($bytes);
 isa_ok $doc->{foo}, 'Mango::BSON::Binary', 'right class';
-is $doc->{foo}->type, 'md5', 'right type';
-is_deeply $doc, {foo => bson_bin('12345')->type('md5')}, 'right document';
+is $doc->{foo}->subtype, 'md5', 'right type';
+is_deeply $doc, {foo => bson_bytes('12345')->type('md5')}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
 # UUID binary roundtrip
@@ -330,8 +330,8 @@ $bytes = "\x14\x00\x00\x00\x05\x66\x6f\x6f\x00\x05\x00\x00\x00\x04\x31\x32\x33"
   . "\x34\x35\x00";
 $doc = bson_decode($bytes);
 isa_ok $doc->{foo}, 'Mango::BSON::Binary', 'right class';
-is $doc->{foo}->type, 'uuid', 'right type';
-is_deeply $doc, {foo => bson_bin('12345')->type('uuid')}, 'right document';
+is $doc->{foo}->subtype, 'uuid', 'right type';
+is_deeply $doc, {foo => bson_bytes('12345')->type('uuid')}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
 # User defined binary roundtrip
@@ -339,8 +339,8 @@ $bytes = "\x14\x00\x00\x00\x05\x66\x6f\x6f\x00\x05\x00\x00\x00\x80\x31\x32\x33"
   . "\x34\x35\x00";
 $doc = bson_decode($bytes);
 isa_ok $doc->{foo}, 'Mango::BSON::Binary', 'right class';
-is $doc->{foo}->type, 'user_defined', 'right type';
-is_deeply $doc, {foo => bson_bin('12345')->type('user_defined')},
+is $doc->{foo}->subtype, 'user_defined', 'right type';
+is_deeply $doc, {foo => bson_bytes('12345')->type('user_defined')},
   'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
@@ -360,7 +360,7 @@ $bytes
   . "\x66\x00\x05\x00\x00\x00\x74\x65\x73\x74\x00\x00\x00";
 $doc = bson_decode($bytes);
 is $doc->{dbref}{'$ref'}, 'test', 'right collection name';
-is $doc->{dbref}{'$id'}->to_string, '525139d85867b45714020000',
+is $doc->{dbref}{'$id'}->hex, '525139d85867b45714020000',
   'right object id';
 is bson_encode($doc), $bytes, 'successful roundtrip';
 
@@ -376,9 +376,9 @@ $bytes = "\x10\x00\x00\x00\x05\x66\x6f\x6f\x00\x01\x00\x00\x00\x00\x31\x00";
 $doc   = bson_decode($bytes);
 isa_ok $doc->{foo}, 'Mango::BSON::Binary', 'right class';
 is $doc->{foo}->type, 'generic', 'right type';
-is_deeply $doc, {foo => bson_bin('1')}, 'right document';
+is_deeply $doc, {foo => bson_bytes('1')}, 'right document';
 is bson_encode($doc), $bytes, 'successful roundtrip';
-is bson_bin('1'), '1', 'right result';
+is bson_bytes('1'), '1', 'right result';
 
 # Blessed reference
 $bytes = bson_encode {test => b('test')};
@@ -486,18 +486,18 @@ is_deeply bson_decode(bson_encode {test => [-sin(9**9**9)]}),
   {test => [-sin(9**9**9)]}, 'successful roundtrip';
 
 # Time to JSON
-is encode_json({time => bson_time(1360626536748)}), '{"time":1360626536748}',
-  'right JSON';
+is encode_json({time => bson_time(1360626536748)}),
+  '{"time":"2013-02-11T23:48:56.748Z"}', 'right JSON';
 is encode_json({time => bson_time('1360626536748')}),
-  '{"time":1360626536748}', 'right JSON';
+  '{"time":"2013-02-11T23:48:56.748Z"}', 'right JSON';
 
 # Binary to JSON
-is encode_json({bin => bson_bin('Hello World!')}),
+is encode_json({bin => bson_bytes('Hello World!')}),
   '{"bin":"SGVsbG8gV29ybGQh"}', 'right JSON';
 
 # DBRef to JSON
 my $json = encode_json(
-  {dbref => bson_dbref('test', bson_oid('525139d85867b45714020000'))} );
+  {dbref => bson_dbref(bson_oid('525139d85867b45714020000'), 'test')} );
 $json = decode_json($json);
 is $json->{dbref}{'$ref'}, 'test', 'dbref $ref in JSON';
 is $json->{dbref}{'$id'}, '525139d85867b45714020000', 'dbref $id in JSON';

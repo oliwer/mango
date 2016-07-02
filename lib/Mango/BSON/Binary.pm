@@ -6,6 +6,9 @@ use Mojo::Util 'b64_encode';
 
 has [qw(data type)];
 
+# Forward compatibility with BSON::Bytes
+*subtype = \&type;
+
 sub TO_JSON { b64_encode shift->data, '' }
 
 1;
@@ -45,7 +48,7 @@ Binary data.
   my $type = $bin->type;
   $bin     = $bin->type('generic');
 
-Binary subtype.
+Binary subtype. Please use the L</subtype> method in newly written code.
 
 =head1 METHODS
 
@@ -57,6 +60,11 @@ the following new ones.
   my $b64 = $bin->TO_JSON;
 
 Base64 encode L</"data">.
+
+=head2 subtype
+
+Alias for the L</type> attribute for forward compatibility with
+L<BSON::Bytes>.
 
 =head1 OPERATORS
 
