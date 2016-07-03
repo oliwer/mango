@@ -2,7 +2,7 @@ package Mango::BSON::ObjectID;
 use Mojo::Base -base;
 use overload bool => sub {1}, '""' => sub { shift->hex }, fallback => 1;
 
-use Carp 'croak';
+use Carp qw(carp croak);
 use Mojo::Util qw(deprecated md5_bytes);
 use Sys::Hostname 'hostname';
 
@@ -31,7 +31,7 @@ sub new {
 
   # Make sure people are using bson_oid
   if ( (caller)[0] !~ /^Mango::/ ) {
-    warn "You should never use the Mango::BSON::ObjectID constructor ".
+    carp "You should never use the Mango::BSON::ObjectID constructor ".
          "directly. Use bson_oid from Mango::BSON instead.";
   }
 

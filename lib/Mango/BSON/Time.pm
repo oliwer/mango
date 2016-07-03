@@ -2,6 +2,7 @@ package Mango::BSON::Time;
 use Mojo::Base -base;
 use overload bool => sub {1}, '""' => sub { shift->epoch }, fallback => 1;
 
+use Carp 'carp';
 use Mojo::Date;
 use Mojo::Util 'deprecated';
 use Time::HiRes 'time';
@@ -9,7 +10,7 @@ use Time::HiRes 'time';
 sub new {
   # Make sure people are using bson_time
   if ( (caller)[0] !~ /^Mango::/ ) {
-    warn "You should never use the Mango::BSON::Time constructor ".
+    carp "You should never use the Mango::BSON::Time constructor ".
          "directly. Use bson_time from Mango::BSON instead.";
   }
 
