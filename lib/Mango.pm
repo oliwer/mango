@@ -329,6 +329,7 @@ Mango - Pure-Perl non-blocking I/O MongoDB driver
 =head1 SYNOPSIS
 
   use Mango;
+  use feature state;
 
   # Declare a Mango helper
   sub mango { state $m = Mango->new('mongodb://localhost:27017') }
