@@ -483,7 +483,7 @@ C<5>.
   my $max = $mango->max_write_batch_size;
   $mango  = $mango->max_write_batch_size(1000);
 
- Maximum number of write operations to batch together, defaults to C<1000>.
+Maximum number of write operations to batch together, defaults to C<1000>.
 
 =head2 protocol
 
