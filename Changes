@@ -1,3 +1,10 @@
+1.30  2018-03-15
+ - Add TLS support!
+ - Fix a crash that could happen during SCRAM authentification (#28)
+ - Mango::BSON::Time::to_datetime now renders negative epochs properly
+   thanks to Adriano Ferreira
+ - Documentation improvements thanks to @manwar and @wilyarti
+
 1.29  2016-06-28
  - Keep document's members order when doing an insert (thanks Stefan)
  - Improve Mango->new documentation to explain why you need to use a
