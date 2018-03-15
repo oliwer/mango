@@ -63,8 +63,7 @@ sub _authenticate {
   $mango->_fast($id, $db, $command, $delay->begin(0));
 
   $delay->wait;
-  $delay->ioloop->one_tick;
-
+  $delay->ioloop->one_tick unless $delay->ioloop->is_running;
 }
 
 sub _cmd_sasl_start {
