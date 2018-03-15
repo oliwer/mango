@@ -14,6 +14,7 @@ use Scalar::Util 'weaken';
 use constant DEBUG => $ENV{MANGO_DEBUG} || 0;
 use constant DEFAULT_PORT => 27017;
 
+has connect_opt => sub { [] };
 has default_db  => 'admin';
 has hosts       => sub { [['localhost']] };
 has [qw(inactivity_timeout j)] => 0;
@@ -43,7 +44,7 @@ sub db {
 }
 
 sub from_string {
-  my ($self, $str) = @_;
+  my ($self, $str, @extra) = @_;
 
   # Protocol
   return $self unless $str;
@@ -72,6 +73,9 @@ sub from_string {
   if (my $j       = $query->param('journal'))    { $self->j($j) }
   if (my $w       = $query->param('w'))          { $self->w($w) }
   if (my $timeout = $query->param('wtimeoutMS')) { $self->wtimeout($timeout) }
+
+  # Other connection options like TLS
+  if (@extra) { $self->connect_opt(\@extra) }
 
   return $self;
 }
@@ -134,10 +138,12 @@ sub _connect {
   my ($self, $nb, $hosts) = @_;
 
   my ($host, $port) = @{shift @{$hosts ||= [@{$self->hosts}]}};
+  $port //= DEFAULT_PORT;
+  my @extra = @{$self->connect_opt};
   weaken $self;
   my $id;
   $id = $self->_loop($nb)->client(
-    {address => $host, port => $port //= DEFAULT_PORT} => sub {
+    {address => $host, port => $port, @extra} => sub {
       my ($loop, $err, $stream) = @_;
 
       # Connection error (try next server)
@@ -566,6 +572,10 @@ perform operation non-blocking.
   my $mango = Mango->new;
   my $mango = Mango->new('mongodb://sri:s3cret@localhost:3000/test?w=2');
 
+  # Using TLS encryption
+  my $mango = Mango->new('mongodb://127.0.0.1:27017', tls => 1,
+    tls_cert => '/path/to/certificate.pem');
+
 Construct a new L<Mango> object and parse connection string with
 L</"from_string"> if necessary.
 
@@ -578,6 +588,10 @@ undefined after you use the C<db> method. So, use a helper to prevent that.
 If a username and password are provided, Mango will try to authenticate using
 SCRAM-SHA1. B<Warning:> this will require L<Authen::SCRAM> which is not
 installed by default.
+
+Any extra arguments given after the connection string will be passed to the
+C<connect> method from L<Mojo::IOLoop::Client>. To connect to a server using
+TLS, use the options C<tls> (boolean), C<tls_cert> and optionally C<tls_ca>.
 
 =head2 query
 
