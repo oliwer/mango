@@ -58,6 +58,10 @@ is bson_time(1360626536748), 1360626536748, 'right epoch milliseconds';
 is bson_time(1360626536748)->to_epoch, 1360626536.748, 'right epoch seconds';
 is bson_time(1360626536748)->to_datetime, '2013-02-11T23:48:56.748Z',
   'right format';
+is bson_time(-28731600 * 1000)->to_datetime, '1969-02-02T11:00:00Z',
+  'Before epoch: Boris Karloff death';
+is bson_time(-4890694522 * 1000)->to_datetime, '1815-01-08T17:44:38Z',
+  'Well before epoch: Battle of New Orleans';
 
 # Empty document
 my $bson = bson_encode {};
