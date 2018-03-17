@@ -69,9 +69,9 @@ sub find {
 }
 
 sub find_and_modify {
-  my ($self, $opts) = (shift, shift);
+  my ($self, $opts, $cb) = @_;
   return $self->_command(bson_doc(findAndModify => $self->name, %$opts),
-    shift, sub { shift->{value} });
+    $cb, sub { my $doc = shift; $doc ? $doc->{value} : undef });
 }
 
 sub find_one {

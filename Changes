@@ -1,6 +1,7 @@
 1.30  2018-03-15
  - Add TLS support!
  - Fix a crash that could happen during SCRAM authentification (#28)
+ - Fix possible NPE in find_and_modify by @losyme
  - Mango::BSON::Time::to_datetime now renders negative epochs properly
    thanks to Adriano Ferreira
  - Documentation improvements thanks to @manwar and @wilyarti
