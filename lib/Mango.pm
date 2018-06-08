@@ -5,6 +5,7 @@ use Carp 'croak';
 use Hash::Util::FieldHash;
 use Mango::BSON 'bson_doc';
 use Mango::Database;
+use Mango::Promises;
 use Mango::Protocol;
 use Mojo::IOLoop;
 use Mojo::URL;
@@ -13,6 +14,7 @@ use Scalar::Util 'weaken';
 
 use constant DEBUG => $ENV{MANGO_DEBUG} || 0;
 use constant DEFAULT_PORT => 27017;
+use constant PROMISES => Mango::Promises::PROMISES;
 
 has connect_opt => sub { [] };
 has default_db  => 'admin';
@@ -30,6 +32,8 @@ has w => 1;
 Hash::Util::FieldHash::fieldhash my %AUTH;
 
 our $VERSION = '1.30';
+
+Mango::Promises->generate_p_methods(qw(get_more kill_cursors/0 query));
 
 sub DESTROY { shift->_cleanup }
 

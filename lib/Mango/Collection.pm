@@ -6,8 +6,14 @@ use Mango::BSON qw(bson_code bson_doc bson_oid);
 use Mango::Bulk;
 use Mango::Cursor;
 use Mango::Cursor::Query;
+use Mango::Promises;
 
 has [qw(db name)];
+
+Mango::Promises->generate_p_methods(
+  qw(aggregate create/0 drop/0 drop_index/0 ensure_index/0 find_and_modify find_one
+    index_information insert map_reduce options remove rename save stats update)
+);
 
 sub aggregate {
   my ($self, $pipeline) = (shift, shift);

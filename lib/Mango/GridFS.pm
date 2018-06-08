@@ -3,11 +3,14 @@ use Mojo::Base -base;
 
 use Mango::GridFS::Reader;
 use Mango::GridFS::Writer;
+use Mango::Promises;
 
 has chunks => sub { $_[0]->db->collection($_[0]->prefix . '.chunks') };
 has 'db';
 has files => sub { $_[0]->db->collection($_[0]->prefix . '.files') };
 has prefix => 'fs';
+
+Mango::Promises->generate_p_methods(qw(delete/0 find_version list));
 
 sub delete {
   my ($self, $oid, $cb) = @_;

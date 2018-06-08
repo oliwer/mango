@@ -5,8 +5,12 @@ use Carp 'croak';
 use Mango::BSON qw(bson_code bson_doc);
 use Mango::Collection;
 use Mango::GridFS;
+use Mango::Promises;
 
 has [qw(mango name)];
+
+Mango::Promises->generate_p_methods(
+  qw(collection_names command dereference list_collections stats));
 
 sub build_write_concern {
   my $mango = shift->mango;

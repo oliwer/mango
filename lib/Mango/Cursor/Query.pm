@@ -2,6 +2,7 @@ package Mango::Cursor::Query;
 use Mojo::Base 'Mango::Cursor';
 
 use Mango::BSON 'bson_doc';
+use Mango::Promises;
 
 has [
   qw(await_data comment hint max_scan max_time_ms read_preference snapshot),
@@ -9,6 +10,8 @@ has [
 ];
 has [qw(fields query)];
 has skip => 0;
+
+Mango::Promises->generate_p_methods(qw(count distinct explain));
 
 sub build_query {
   my ($self, $explain) = @_;

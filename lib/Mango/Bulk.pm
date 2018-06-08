@@ -3,10 +3,13 @@ use Mojo::Base -base;
 
 use Carp 'croak';
 use Mango::BSON qw(bson_doc bson_encode bson_oid bson_raw);
+use Mango::Promises;
 use Mojo::IOLoop;
 
 has 'collection';
 has ordered => 1;
+
+Mango::Promises->generate_p_methods(qw(execute));
 
 sub execute {
   my ($self, $cb) = @_;

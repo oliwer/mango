@@ -5,9 +5,12 @@ use Carp 'croak';
 use List::Util 'first';
 use Mango::BSON qw(bson_bin bson_doc bson_oid bson_time);
 use Mojo::IOLoop;
+use Mango::Promises;
 
 has chunk_size => 261120;
 has [qw(content_type filename gridfs metadata)];
+
+Mango::Promises->generate_p_methods(qw(close write/0));
 
 sub close {
   my ($self, $cb) = @_;

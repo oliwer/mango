@@ -1,10 +1,13 @@
 package Mango::Cursor;
 use Mojo::Base -base;
 
+use Mango::Promises;
 use Mojo::IOLoop;
 
 has [qw(collection id ns)];
 has [qw(batch_size limit)] => 0;
+
+Mango::Promises->generate_p_methods(qw(all next rewind/0));
 
 sub add_batch {
   my ($self, $docs) = @_;

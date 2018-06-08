@@ -2,8 +2,11 @@ package Mango::GridFS::Reader;
 use Mojo::Base -base;
 
 use Carp 'croak';
+use Mango::Promises;
 
 has 'gridfs';
+
+Mango::Promises->generate_p_methods(qw(open/0 read slurp));
 
 sub chunk_size   { shift->{meta}{chunkSize} }
 sub content_type { shift->{meta}{contentType} }
