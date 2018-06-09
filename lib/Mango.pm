@@ -410,6 +410,13 @@ you can use to generate data types that are not available natively in Perl.
 All connections will be reset automatically if a new process has been forked,
 this allows multiple processes to share the same L<Mango> object safely.
 
+Since version 1.31, L<Mango> supports non-blocking with promise-returning
+methods like
+L<< $collection->find_one_p|Mango::Collection/"find_one_p" >>,
+L<< $cursor->all_p|Mango::Cursor/"all_p" >>,
+L<< $bulk->execute_p|Mango::Bulk/"execute_p" >>, etc.
+Note that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 For better scalability (epoll, kqueue) and to provide IPv6, SOCKS5 as well as
 TLS support, the optional modules L<EV> (4.0+), L<IO::Socket::IP> (0.20+),
 L<IO::Socket::Socks> (0.64+) and L<IO::Socket::SSL> (1.84+) will be used
@@ -558,6 +565,15 @@ perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 get_more_p
+
+  my $promise = $mango->get_more_p($namespace, $return, $cursor);
+
+Same as L</"get_more">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 kill_cursors
 
   $mango->kill_cursors(@ids);
@@ -570,6 +586,15 @@ perform operation non-blocking.
       ...
     });
     Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 kill_cursors_p
+
+  my $promise = $mango->kill_cursors_p(@ids);
+
+Same as L</"kill_cursors">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 new
 
@@ -610,6 +635,16 @@ perform operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 query_p
+
+  my $promise
+    = $mango->query_p($namespace, $flags, $skip, $return, $query, $fields);
+
+Same as L</"query">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head1 DEBUGGING
 

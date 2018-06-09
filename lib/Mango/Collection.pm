@@ -334,6 +334,15 @@ operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 aggregate_p
+
+  my $promise = $collection->aggregate_p(\@pipeline);
+
+Same as L</"aggregate">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 build_index_name
 
   my $name = $collection->build_index_name(bson_doc(foo => 1, bar => -1));
@@ -368,6 +377,16 @@ non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 create_p
+
+  my $promise = $collection->create_p;
+  my $promise = $collection->create_p(\%opts);
+
+Same as L</"create">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 drop
 
   $collection->drop;
@@ -381,6 +400,15 @@ non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 drop_p
+
+  my $promise = $collection->drop_p;
+
+Same as L</"drop">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 drop_index
 
   $collection->drop_index('foo');
@@ -392,6 +420,15 @@ Drop index. You can also append a callback to perform operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 drop_index_p
+
+  my $promise = $collection->drop_index_p;
+
+Same as L</"drop_index">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 ensure_index
 
@@ -408,6 +445,17 @@ append a callback to perform operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 ensure_index_p
+
+  $promise = $collection->ensure_index_p(bson_doc(foo => 1, bar => -1));
+  $promise = $collection->ensure_index_p({foo => 1});
+  $promise = $collection->ensure_index_p({foo => 1}, {unique => bson_true});
+
+Same as L</"ensure_index">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 find
 
@@ -438,6 +486,15 @@ to perform operation non-blocking.
 By default this method returns the unmodified version of the document. To
 change this behaviour, add the option C<new =E<gt> 1>.
 
+=head2 find_and_modify_p
+
+  $promise = $collection->find_and_modify_p($opts);
+
+Same as L</"find_and_modify">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 find_one
 
   my $doc = $collection->find_one({foo => 'bar'});
@@ -452,6 +509,17 @@ non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 find_one_p
+
+  my $promise = $collection->find_one_p({foo => 'bar'});
+  my $promise = $collection->find_one_p({foo => 'bar'}, {foo => 1});
+  my $promise = $collection->find_one_p($oid, {foo => 1});
+
+Same as L</"find_one">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 full_name
 
@@ -474,6 +542,16 @@ perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 index_information_p
+
+  my $promise = $collection->index_information_p;
+  my $promise = $collection->index_information_p(cursor => { batchSize => 5 });
+
+Same as L</"index_information">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 insert
 
   my $oid  = $collection->insert({foo => 'bar'});
@@ -493,6 +571,16 @@ them to MongoDB. To avoid modifying your data, it makes a copy of the
 documents. This can be a bit slow if you are sending big objects like
 pictures. To avoid that, consider using C<save> instead.
 
+=head2 insert_p
+
+  my $promise = $collection->insert_p({foo => 'bar'});
+  my $promise = $collection->insert_p([{foo => 'bar'}, {baz => 'yada'}]);
+
+Same as L</"insert_p">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 map_reduce
 
   my $collection = $collection->map_reduce($map, $reduce, {out => 'foo'});
@@ -511,6 +599,18 @@ operation non-blocking.
   );
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 map_reduce_p
+
+  my $promise = $collection->map_reduce_p($map, $reduce, {out => 'foo'});
+  my $promise = $collection->map_reduce_p($map, $reduce, {out => {inline => 1}});
+  my $promise = $collection->map_reduce_p(
+    bson_code($map), bson_code($reduce), {out => {inline => 1}});
+
+Same as L</"map_reduce">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 options
 
   my $doc = $collection->options;
@@ -523,6 +623,15 @@ operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 options_p
+
+  my $promise = $collection->options_p;
+
+Same as L</"options">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 remove
 
@@ -552,6 +661,18 @@ Remove only one document.
 
 =back
 
+=head2 remove_p
+
+  my $promise = $collection->remove_p;
+  my $promise = $collection->remove_p($oid);
+  my $promise = $collection->remove_p({foo => 'bar'});
+  my $promise = $collection->remove_p({foo => 'bar'}, {single => 1});
+
+Same as L</"remove">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 rename
 
   my $new_collection = $collection->rename('NewName');
@@ -566,6 +687,15 @@ also append a callback to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 rename_p
+
+  my $promise = $collection->rename_p('NewName');
+
+Same as L</"rename">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 save
 
   my $oid = $collection->save({foo => 'bar'});
@@ -579,6 +709,15 @@ append a callback to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 save_p
+
+  my $promise = $collection->save_p({foo => 'bar'});
+
+Same as L</"save">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 stats
 
   my $stats = $collection->stats;
@@ -591,6 +730,15 @@ non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 stats_p
+
+  my $promise = $collection->stats_p;
+
+Same as L</"stats">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 update
 
@@ -624,6 +772,17 @@ Update more than one document.
 Insert document if none could be updated.
 
 =back
+
+=head2 update_p
+
+  my $promise = $collection->update_p($oid, {foo => 'baz'});
+  my $promise = $collection->update_p({foo => 'bar'}, {foo => 'baz'});
+  my $promise = $collection->update_p({foo => 'bar'}, {foo => 'baz'}, {multi => 1});
+
+Same as L</"update">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head1 SEE ALSO
 
