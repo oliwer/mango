@@ -28,6 +28,19 @@ Mojo::IOLoop->start;
 ok !$fail, 'no error';
 ok $result, 'command was successful';
 
+# Run command with promises
+if (Mango::PROMISES) {
+  $db->command_p('getnonce')->then(
+    sub {
+      my $doc = shift;
+      ok $doc->{nonce}, 'command_p was successful';
+    },
+    sub {
+      fail("command_p failed, err: $_[0]");    # should not happen
+    }
+  )->wait;
+}
+
 # Write concern
 my $mango2  = Mango->new->w(2)->wtimeout(5000);
 my $concern = $mango2->db('test')->build_write_concern;
@@ -50,6 +63,19 @@ $db->stats(
 Mojo::IOLoop->start;
 ok !$fail, 'no error';
 ok exists $result->{objects}, 'has objects';
+
+# Get database statistics with promises
+if (Mango::PROMISES) {
+  $db->stats_p->then(
+    sub {
+      my $stats = shift;
+      ok exists $stats->{objects}, 'stats_p: has objects';
+    },
+    sub {
+      fail("stats_p failed, err: $_[0]");    # should not happen
+    }
+  )->wait;
+}
 
 # List collections
 my $collection = $db->collection('database_test');
@@ -79,6 +105,21 @@ ok !$fail, 'no error';
 ok grep { $_ eq 'database_test' } @$result, 'found collection';
 $collection->drop;
 
+# Get collection names with promises
+if (Mango::PROMISES) {
+  $collection->insert({test => 1});
+  $db->collection_names_p->then(
+    sub {
+      my $names = shift;
+      ok grep { $_ eq 'database_test' } @$names, 'collection_names_p: found collection';
+    },
+    sub {
+      fail("collection_names_p failed, err: $_[0]");    # should not happen
+    }
+  );
+  $collection->drop;
+}
+
 # Dereference blocking
 my $oid = $collection->insert({test => 23});
 is $db->dereference(bson_dbref('database_test', $oid))->{test}, 23,
@@ -100,6 +141,21 @@ Mojo::IOLoop->start;
 ok !$fail, 'no error';
 is $result->{test}, 23, 'right result';
 $collection->drop;
+
+# Dereference with promises
+if (Mango::PROMISES) {
+  $oid = $collection->insert({test => 23});
+  $db->dereference_p(bson_dbref('database_test', $oid))->then(
+    sub {
+      my $doc = shift;
+      is $doc->{test}, 23, 'dereference_p: right result';
+    },
+    sub {
+      fail("dereference_p failed, err: $_[0]");    # should not happen
+    }
+  )->wait;
+  $collection->drop;
+}
 
 # Interrupted blocking command
 my $loop = $mango->ioloop;

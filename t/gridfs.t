@@ -143,6 +143,121 @@ is_deeply $after, [], 'no files';
 is $gridfs->chunks->find->count, 0, 'no chunks left';
 $gridfs->$_->drop for qw(files chunks);
 
+# Non-blocking roundtrip with promises
+if (Mango::PROMISES) {
+
+  $writer = $gridfs->writer->chunk_size(4);
+  $writer->filename('foo.txt')->content_type('text/plain')
+    ->metadata({foo => 'bar'});
+  ok !$writer->is_closed, 'file has not been closed';
+
+  $writer->write_p('he')->then(
+    sub {
+      $writer->write_p('llo ');
+    }
+  )->then(
+    sub {
+      $writer->write_p('w');
+    }
+  )->then(
+    sub {
+      $writer->write_p('orld!');
+    }
+  )->then(
+    sub {
+      $writer->close_p;
+    },
+    sub {
+      fail("write_p  failed, err: $_[0]");    # should not happen
+    }
+  )->then(
+    sub {
+      my $oid = shift;
+      ok $writer->is_closed, 'file has been closed - p';
+      $result = $oid;
+    },
+    sub {
+      fail("close_p failed, err: $_[0]");     # should not happen
+    }
+  )->wait;
+
+  $reader = $gridfs->reader;
+  $reader->open_p($result)->then(
+    sub {
+      is $reader->filename,     'foo.txt',    'right filename - p';
+      is $reader->content_type, 'text/plain', 'right content type - p';
+      is $reader->md5, 'fc3ff98e8c6a0d3087d515c0473f8677', 'right checksum - p';
+      is_deeply $reader->metadata, {foo => 'bar'}, 'right structure - p';
+      is $reader->size,       12, 'right size - p';
+      is $reader->chunk_size, 4,  'right chunk size - p';
+      is length $reader->upload_date, length(time) + 3, 'right time format - p';
+    },
+    sub {
+      fail("open_p failed, err: $_[0]");    # should not happen
+    }
+  )->then(
+    sub {
+      my ($data, $cb);
+      $reader->read_p()->then(
+        $cb = sub {
+          my $chunk = shift;
+          return unless defined $chunk;
+          $data .= $chunk;
+          $reader->read_p()->then($cb);
+        }
+      )->then(
+        sub {
+          is $data, 'hello world!', 'right content - p';
+        },
+        sub {
+          fail("read_p failed, err: $_[0]");    # should not happen
+        }
+      );
+    }
+  )->then(
+    sub {
+      $reader->seek(0);                         # rewind
+      $reader->slurp_p();
+    }
+  )->then(
+    sub {
+      my $data = shift;
+      is $data, 'hello world!', 'right slurped content - p';
+    },
+    sub {
+      fail("slurp_p failed, err: $_[0]");       # should not happen
+    }
+  )->wait;
+
+  $gridfs->list_p()->then(
+    sub {
+      my $names = shift;
+      is_deeply $names, ['foo.txt'], 'right files - p';
+
+      $gridfs->delete_p($result);
+    },
+    sub {
+      fail("list_p failed, err: $_[0]");        # should not happen
+    }
+  )->then(
+    sub {
+      $gridfs->list_p;
+    },
+    sub {
+      fail("delete_p failed, err: $_[0]");      # should not happen
+    }
+  )->then(
+    sub {
+      my $names = shift;
+      is_deeply $names, [], 'no files - p';
+
+      is $gridfs->chunks->find->count, 0, 'no chunks left - p';
+    }
+  )->wait;
+
+  $gridfs->$_->drop for qw(files chunks);
+}
+
 # Find and slurp versions blocking
 my $one
   = $gridfs->writer->chunk_size(1)->filename('test.txt')->write('One1')->close;

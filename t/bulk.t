@@ -46,6 +46,27 @@ is_deeply $result->{upserted},           [], 'no upserts';
 is_deeply $result->{writeConcernErrors}, [], 'no write concern errors';
 is_deeply $result->{writeErrors},        [], 'no write errors';
 
+# Non-blocking with promises
+if (Mango::PROMISES) {
+  $collection->bulk->execute_p->then(
+    sub {
+      my $result = shift;
+      is $result->{nInserted}, 0, 'no inserts - p';
+      is $result->{nMatched},  0, 'no matches - p';
+      is $result->{nModified}, 0, 'no modifications - p';
+      is $result->{nRemoved},  0, 'no removals - p';
+      is $result->{nUpserted}, 0, 'no upserts - p';
+      is_deeply $result->{upserted},           [], 'no upserts - p';
+      is_deeply $result->{writeConcernErrors}, [], 'no write concern errors - p';
+      is_deeply $result->{writeErrors},        [], 'no write errors - p';
+    },
+    sub {
+      my $err = shift;
+      fail("execute_p failed, err: $err");    # should not happen
+    }
+  )->wait;
+}
+
 # Mixed bulk operations blocking
 my $bulk = $collection->bulk;
 ok $bulk->ordered, 'ordered bulk operations';
@@ -88,6 +109,31 @@ is $result->{nUpserted}, 1, 'one upsert';
 ok $result->{upserted}[0], 'one upsert';
 is_deeply $result->{writeConcernErrors}, [], 'no write concern errors';
 is_deeply $result->{writeErrors},        [], 'no write errors';
+
+# Mixed bulk operations with promises
+if (Mango::PROMISES) {
+  $bulk = $collection->bulk;
+  $bulk->insert({foo => 'bar'});
+  $bulk->find({foo => 'bar'})->update_one({foo => 'baz'});
+  $bulk->find({foo => 'yada'})->upsert->update_one({foo => 'baz'});
+  $bulk->find({foo => 'baz'})->remove;
+  $bulk->execute_p->then(
+    sub {
+      my $result = shift;
+      is $result->{nInserted}, 1, 'one insert - p';
+      is $result->{nMatched},  1, 'one match - p';
+      is $result->{nModified}, 2, 'two modifications - p';
+      is $result->{nRemoved},  2, 'two removals - p';
+      is $result->{nUpserted}, 1, 'one upsert - p';
+      ok $result->{upserted}[0], 'one upsert - p';
+      is_deeply $result->{writeConcernErrors}, [], 'no write concern errors - p';
+      is_deeply $result->{writeErrors},        [], 'no write errors - p';
+    },
+    sub {
+      fail("execute_p failed, err: $_[0]");    # should not happen
+    }
+  )->wait;
+}
 
 # All operations
 $bulk = $collection->bulk;
