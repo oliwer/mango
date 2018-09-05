@@ -1,3 +1,6 @@
+1.31  
+ - Fix typo in the synopsis (#33)
+
 1.30  2018-03-15
  - Add TLS support!
  - Fix a crash that could happen during SCRAM authentification (#28)
