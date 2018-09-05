@@ -2,8 +2,11 @@ package Mango::GridFS::Reader;
 use Mojo::Base -base;
 
 use Carp 'croak';
+use Mango::Promises;
 
 has 'gridfs';
+
+Mango::Promises->generate_p_methods(qw(open/0 read slurp));
 
 sub chunk_size   { shift->{meta}{chunkSize} }
 sub content_type { shift->{meta}{contentType} }
@@ -179,6 +182,15 @@ Open file. You can also append a callback to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 open_p
+
+  my $promise = $reader->open_p;
+
+Same as L</"open">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 read
 
   my $chunk = $reader->read;
@@ -190,6 +202,15 @@ Read chunk. You can also append a callback to perform operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 read_p
+
+  my $promise = $reader->read_p;
+
+Same as L</"read">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 seek
 
@@ -215,6 +236,15 @@ operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 slurp_p
+
+  my $promise = $slurper->slurp_p;
+
+Same as L</"slurp">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 tell
 

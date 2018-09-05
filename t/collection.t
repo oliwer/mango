@@ -58,6 +58,19 @@ Mojo::IOLoop->start;
 ok !$fail, 'no error';
 is $result->{count}, 2, 'right number of documents';
 
+# Get collection statistics with promises
+if (Mango::PROMISES) {
+  $collection->stats_p->then(
+    sub {
+      my $result = shift;
+      is $result->{count}, 2, 'right number of documents - p';
+    },
+    sub {
+      fail("stats_p failed, err: $_[0]");    # should not happen
+    }
+  )->wait;
+}
+
 # Rename the collection
 ok $collection = $collection->rename('renamed'), 'collection renamed';
 $collection->rename('collection_test' => sub {
@@ -70,6 +83,28 @@ Mojo::IOLoop->start;
 ok !$fail, 'no error';
 is $result->name, 'collection_test', 'collection renamed non-blocking';
 $collection = $result;
+
+# Rename the collection with promises
+if (Mango::PROMISES) {
+  $collection->rename_p('renamed')->then(
+    sub {
+      my $c = shift;
+      is $c->name, 'renamed', 'collection renamed - p';
+      $c->rename_p('collection_test')->then(
+        sub {
+          my $c = shift;
+          is $c->name, 'collection_test', 'collection name restored - p';
+        },
+        sub {
+          fail("2nd rename_p failed, err: $_[0]");    # should not happen
+        }
+      );
+    },
+    sub {
+      fail("rename_p failed, err: $_[0]");            # should not happen
+    }
+  )->wait;
+}
 
 # Update documents blocking
 is $collection->update({}, {'$set' => {bar => 'works'}}, {multi => 1})->{n},
@@ -329,6 +364,20 @@ $collection->drop(
 Mojo::IOLoop->start;
 ok !$fail, 'no error';
 ok !$collection->find_one($oid), 'no document';
+
+# Drop collection with promises
+if (Mango::PROMISES) {
+  $oid = $collection->insert({just => 'works'});
+  is $collection->find_one($oid)->{just}, 'works', 'right document';
+  $collection->drop_p->then(
+    sub {
+      ok !$collection->find_one($oid), 'no document';
+    },
+    sub {
+      fail("drop_p failed, err: $_[0]");    # should not happen
+    }
+  )->wait;
+}
 
 # Ensure and drop index blocking
 $collection->insert({test => 23, foo => 'bar'});

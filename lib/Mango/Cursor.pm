@@ -1,10 +1,13 @@
 package Mango::Cursor;
 use Mojo::Base -base;
 
+use Mango::Promises;
 use Mojo::IOLoop;
 
 has [qw(collection id ns)];
 has [qw(batch_size limit)] => 0;
+
+Mango::Promises->generate_p_methods(qw(all next rewind/0));
 
 sub add_batch {
   my ($self, $docs) = @_;
@@ -185,6 +188,15 @@ operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 all_p
+
+  my $promise = $cursor->all_p;
+
+Same as L</"all">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 next
 
   my $doc = $cursor->next;
@@ -198,6 +210,15 @@ non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 next_p
+
+  my $promise = $cursor->next_p;
+
+Same as L</"next">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 rewind
 
   $cursor->rewind;
@@ -210,6 +231,15 @@ perform operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 rewind_p
+
+  my $promise = $cursor->rewind_p;
+
+Same as L</"rewind">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 num_to_return
 

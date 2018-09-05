@@ -5,9 +5,12 @@ use Carp 'croak';
 use List::Util 'first';
 use Mango::BSON qw(bson_bin bson_doc bson_oid bson_time);
 use Mojo::IOLoop;
+use Mango::Promises;
 
 has chunk_size => 261120;
 has [qw(content_type filename gridfs metadata)];
+
+Mango::Promises->generate_p_methods(qw(close write/0));
 
 sub close {
   my ($self, $cb) = @_;
@@ -187,6 +190,15 @@ Close file. You can also append a callback to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 close_p
+
+  my $promise = $writer->close_p;
+
+Same as L</"close">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 is_closed
 
   my $success = $writer->is_closed;
@@ -204,6 +216,15 @@ Write chunk. You can also append a callback to perform operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 write_p
+
+  my $promise = $writer->write_p;
+
+Same as L</"write">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head1 SEE ALSO
 

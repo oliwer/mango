@@ -173,6 +173,19 @@ Mojo::IOLoop->start;
 ok !$fail, 'no error';
 is_deeply [sort @$result], [2, 3], 'right values';
 
+# Get distinct values with promises
+if (Mango::PROMISES) {
+  $collection->find({test => {'$gt' => 1}})->distinct_p('test')->then(
+    sub {
+      my $values = shift;
+      is_deeply [sort @$values], [2, 3], 'right values - p';
+    },
+    sub {
+      fail("distinct_p failed, err: $_[0]");    # should not happen
+    }
+  )->wait;
+}
+
 # Count documents blocking
 is $collection->find({foo => 'bar'})->count, 0, 'no documents';
 is $collection->find->skip(1)->limit(1)->count, 1, 'one document';
@@ -201,6 +214,29 @@ my $delay = Mojo::IOLoop->delay(
 $delay->wait;
 ok !$fail, 'no error';
 is_deeply \@results, [3, 0], 'right number of documents';
+
+# Count documents with promises
+if (Mango::PROMISES) {
+  $collection->find->count_p->then(
+    sub {
+      my $count = shift;
+      is $count, 3, 'right collection count - p';
+
+      $collection->find({foo => 'bar'})->count_p;
+    },
+    sub {
+      fail("count_p failed, err: $_[0]");    # should not happen
+    }
+  )->then(
+    sub {
+      my $count = shift;
+      is $count, 0, 'right number of documents - p';
+    },
+    sub {
+      fail("count_p failed, err: $_[0]");    # should not happen
+    }
+  );
+}
 
 # Fetch documents non-blocking
 $cursor = $collection->find->batch_size(2);
@@ -236,6 +272,38 @@ is $docs[0]{test}, 1, 'right document';
 is $docs[1]{test}, 2, 'right document';
 is $docs[2]{test}, 3, 'right document';
 
+# Fetch documents with promises
+if (Mango::PROMISES) {
+  $cursor = $collection->find->batch_size(2);
+  @docs = ();
+  $cursor->next_p->then(
+    sub {
+      push @docs, shift;
+      $cursor->next_p;
+    }
+  )->then(
+    sub {
+      push @docs, shift;
+      $cursor->next_p;
+    }
+  )->then(
+    sub {
+      push @docs, shift;
+      $cursor->next_p;
+    },
+    sub {
+      fail("next_p failed, err: $_[0]");    # should not happen
+    }
+  )->then(
+    sub {
+      @docs = sort { $a->{test} <=> $b->{test} } @docs;
+      is $docs[0]{test}, 1, 'right document - p';
+      is $docs[1]{test}, 2, 'right document - p';
+      is $docs[2]{test}, 3, 'right document - p';
+    }
+  )->wait;
+}
+
 # Fetch all documents non-blocking
 @docs = ();
 $collection->find->batch_size(2)->all(
@@ -250,6 +318,22 @@ Mojo::IOLoop->start;
 is $docs[0]{test}, 1, 'right document';
 is $docs[1]{test}, 2, 'right document';
 is $docs[2]{test}, 3, 'right document';
+
+# Fetch all documents with promises
+if (Mango::PROMISES) {
+  $collection->find->batch_size(2)->all_p->then(
+    sub {
+      my $docs = shift;
+      my @docs = sort { $a->{test} <=> $b->{test} } @$docs;
+      is $docs[0]{test}, 1, 'right document - p';
+      is $docs[1]{test}, 2, 'right document - p';
+      is $docs[2]{test}, 3, 'right document - p';
+    },
+    sub {
+      fail("all_p failed, err: $_[0]");    # should not happen
+    }
+  )->wait;
+}
 
 # Fetch subset of documents sorted
 $docs = $collection->find->fields({_id => 0})->sort({test => 1})->all;

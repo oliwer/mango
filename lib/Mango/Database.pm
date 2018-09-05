@@ -5,8 +5,12 @@ use Carp 'croak';
 use Mango::BSON qw(bson_code bson_doc);
 use Mango::Collection;
 use Mango::GridFS;
+use Mango::Promises;
 
 has [qw(mango name)];
+
+Mango::Promises->generate_p_methods(
+  qw(collection_names command dereference list_collections stats));
 
 sub build_write_concern {
   my $mango = shift->mango;
@@ -175,6 +179,15 @@ to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 collection_names_p
+
+  my $promise = $db->collection_names_p;
+
+Same as L</"collection_names">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 command
 
   my $doc = $db->command(bson_doc(text => 'foo.bar', search => 'test'));
@@ -190,6 +203,17 @@ non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 command_p
+
+  my $promise = $db->command_p(bson_doc(text => 'foo.bar', search => 'test'));
+  my $promise = $db->command_p(bson_doc(getLastError => 1, w => 2));
+  my $promise = $db->command_p('getLastError', w => 2);
+
+Same as L</"command">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 dereference
 
   my $doc = $db->dereference($dbref);
@@ -202,6 +226,15 @@ operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 dereference_p
+
+  my $promise = $db->dereference_p($dbref);
+
+Same as L</"dereference">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 gridfs
 
@@ -230,6 +263,18 @@ C<options>. You can also append a callback to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 list_collections_p
+
+  my $promise = $db->list_collections_p;
+  my $promise = $db->list_collections_p(filter => { name => qr{^prefix} });
+  my $promise = $db->list_collections_p(filter => { 'options.capped' => 1 });
+  my $promise = $db->list_collections_p(cursor => { batchSize => 10 });
+
+Same as L</"list_collections">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 stats
 
   my $stats = $db->stats;
@@ -242,6 +287,15 @@ non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 stats_p
+
+  my $promise = $db->stats_p;
+
+Same as L</"stats">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head1 SEE ALSO
 

@@ -3,11 +3,14 @@ use Mojo::Base -base;
 
 use Mango::GridFS::Reader;
 use Mango::GridFS::Writer;
+use Mango::Promises;
 
 has chunks => sub { $_[0]->db->collection($_[0]->prefix . '.chunks') };
 has 'db';
 has files => sub { $_[0]->db->collection($_[0]->prefix . '.files') };
 has prefix => 'fs';
+
+Mango::Promises->generate_p_methods(qw(delete/0 find_version list));
 
 sub delete {
   my ($self, $oid, $cb) = @_;
@@ -129,6 +132,15 @@ Delete file. You can also append a callback to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 delete_p
+
+  my $promise = $gridfs->delete_p($oid);
+
+Same as L</"delete">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 find_version
 
   my $oid = $gridfs->find_version('test.txt', 1);
@@ -143,6 +155,15 @@ version. You can also append a callback to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 find_version_p
+
+  my $promise = $gridfs->find_version_p($oid);
+
+Same as L</"find_version">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 list
 
   my $names = $gridfs->list;
@@ -154,6 +175,15 @@ List files. You can also append a callback to perform operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 list_p
+
+  my $promise = $gridfs->list_p;
+
+Same as L</"list">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 reader
 

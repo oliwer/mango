@@ -2,6 +2,7 @@ package Mango::Cursor::Query;
 use Mojo::Base 'Mango::Cursor';
 
 use Mango::BSON 'bson_doc';
+use Mango::Promises;
 
 has [
   qw(await_data comment hint max_scan max_time_ms read_preference snapshot),
@@ -9,6 +10,8 @@ has [
 ];
 has [qw(fields query)];
 has skip => 0;
+
+Mango::Promises->generate_p_methods(qw(count distinct explain));
 
 sub build_query {
   my ($self, $explain) = @_;
@@ -253,6 +256,15 @@ callback to perform operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 count_p
+
+  my $promise = $cursor->count_p;
+
+Same as L</"count">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 distinct
 
   my $values = $cursor->distinct('foo');
@@ -266,6 +278,15 @@ operation non-blocking.
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
 
+=head2 distinct_p
+
+  my $promise = $cursor->distinct_p('foo');
+
+Same as L</"distinct">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
+
 =head2 explain
 
   my $doc = $cursor->explain;
@@ -278,6 +299,15 @@ perform operation non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 explain_p
+
+  my $promise = $cursor->explain_p;
+
+Same as L</"explain">, but performs a non-blocking operation
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head1 SEE ALSO
 

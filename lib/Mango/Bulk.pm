@@ -3,10 +3,13 @@ use Mojo::Base -base;
 
 use Carp 'croak';
 use Mango::BSON qw(bson_doc bson_encode bson_oid bson_raw);
+use Mango::Promises;
 use Mojo::IOLoop;
 
 has 'collection';
 has ordered => 1;
+
+Mango::Promises->generate_p_methods(qw(execute));
 
 sub execute {
   my ($self, $cb) = @_;
@@ -208,6 +211,15 @@ non-blocking.
     ...
   });
   Mojo::IOLoop->start unless Mojo::IOLoop->is_running;
+
+=head2 execute_p
+
+  my $promise = $bulk->execute_p;
+
+Same as L</"execute">, but performs bulk operations non-blocking
+and returns a L<Mojo::Promise> object instead of accepting a callback.
+
+Notice that promise support depends on L<Mojo::Promise> (L<Mojolicious> 7.53+).
 
 =head2 find
 
