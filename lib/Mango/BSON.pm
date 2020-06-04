@@ -216,6 +216,9 @@ sub _decode_value {
     my ($p, $m) = (_decode_cstring($bsonref), _decode_cstring($bsonref));
     croak "invalid regex modifier(s) in 'qr/$p/$m'"
       if length($m) and $m !~ /^[msixpadlun]+\z/;
+    # prevent from injecting qr//u modifier implied by a feature enabled by
+    # Mojolicious 8.50
+    no feature 'unicode_strings';
     # escape $pat to avoid code injection
     return eval "qr/\$p/$m";
   }

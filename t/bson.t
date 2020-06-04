@@ -12,6 +12,9 @@ sub TO_BSON { {something => shift->something} }
 
 package main;
 use Mojo::Base -strict;
+# prevent from injecting qr//u modifier implied by a feature enabled by
+# Mojolicious 8.50
+no feature 'unicode_strings';
 no warnings 'portable';  # Mango works on 64bits systems only
 
 use Test::More;
