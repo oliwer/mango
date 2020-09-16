@@ -1,7 +1,7 @@
 
   Pure-Perl non-blocking I/O MongoDB driver, optimized for use with the
   [Mojolicious](http://mojolicio.us) real-time web framework.
-  It also support [BSON::XS](https://metacpan.org/pod/BSON::XS) parser
+  It also supports [BSON::XS](https://metacpan.org/pod/BSON::XS) parser
 
 ```perl
 use Mojolicious::Lite;
