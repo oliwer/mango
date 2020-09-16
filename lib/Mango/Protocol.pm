@@ -1,7 +1,8 @@
 package Mango::Protocol;
 use Mojo::Base -base;
 
-use Mango::BSON qw(bson_decode bson_encode bson_length encode_cstring);
+use Mango::BSON qw(bson_length);
+use BSON; 
 
 # Opcodes
 use constant {REPLY => 1, QUERY => 2004, GET_MORE => 2005,
@@ -11,7 +12,7 @@ sub build_get_more {
   my ($self, $id, $name, $return, $cursor) = @_;
 
   # Zero and name
-  my $msg = pack('l<', 0) . encode_cstring($name);
+  my $msg = pack('l<', 0) . pack('Z*', $name);
 
   # Number to return and cursor id
   $msg .= pack('l<', $return) . pack('q<', $cursor);
@@ -36,6 +37,7 @@ sub build_kill_cursors {
 sub build_query {
   my ($self, $id, $name, $flags, $skip, $return, $query, $fields) = @_;
 
+  my $codec = BSON->new;
   # Flags
   my $vec = pack 'B*', '0' x 32;
   vec($vec, 1, 1) = 1 if $flags->{tailable_cursor};
@@ -47,16 +49,17 @@ sub build_query {
   my $msg = pack 'l<', unpack('V', $vec);
 
   # Name
-  $msg .= encode_cstring $name;
+  utf8::encode $name;
+  $msg .= pack 'Z*', $name;
 
   # Skip and number to return
   $msg .= pack('l<', $skip) . pack('l<', $return);
 
   # Query
-  $msg .= bson_encode $query;
+  $msg .= $codec->encode_one($query);
 
   # Optional field selector
-  $msg .= bson_encode $fields if $fields;
+  $msg .= $codec->encode_one($fields) if $fields;
 
   # Header
   return _build_header($id, length($msg), QUERY) . $msg;
@@ -71,6 +74,8 @@ sub next_id { $_[1] > 2147483646 ? 1 : $_[1] + 1 }
 
 sub parse_reply {
   my ($self, $bufref) = @_;
+
+  my $codec = BSON->new;
 
   # Make sure we have the whole message
   return undef unless my $len = bson_length $$bufref;
@@ -100,7 +105,7 @@ sub parse_reply {
   # Documents (remove number of documents prefix)
   substr $msg, 0, 4, '';
   my @docs;
-  push @docs, bson_decode(substr $msg, 0, bson_length($msg), '') while $msg;
+  push @docs, $codec->decode_one(substr $msg, 0, bson_length($msg), '') while $msg;
 
   return {
     id     => $id,

@@ -1,8 +1,9 @@
 package Mango::Database;
 use Mojo::Base -base;
 
+use boolean;
 use Carp 'croak';
-use Mango::BSON qw(bson_code bson_doc);
+use BSON::Types qw(bson_code bson_doc);
 use Mango::Collection;
 use Mango::GridFS;
 
@@ -11,7 +12,7 @@ has [qw(mango name)];
 sub build_write_concern {
   my $mango = shift->mango;
   return {
-    j => $mango->j ? \1 : \0,
+    j => $mango->j ? true : false,
     w => $mango->w,
     wtimeout => $mango->wtimeout
   };

@@ -3,7 +3,7 @@ use Mojo::Base 'Mojo::EventEmitter';
 
 use Carp 'croak';
 use Hash::Util::FieldHash;
-use Mango::BSON 'bson_doc';
+use BSON::Types 'bson_doc';
 use Mango::Database;
 use Mango::Protocol;
 use Mojo::IOLoop;
@@ -29,7 +29,7 @@ has w => 1;
 # is good for security.
 Hash::Util::FieldHash::fieldhash my %AUTH;
 
-our $VERSION = '1.30';
+our $VERSION = '2.0';
 
 sub DESTROY { shift->_cleanup }
 
@@ -330,7 +330,7 @@ sub _write {
 
 =head1 NAME
 
-Mango - Pure-Perl non-blocking I/O MongoDB driver
+Mango - Pure-Perl non-blocking I/O MongoDB driver. Supports BSON::XS parser if it's available.
 
 =head1 SYNOPSIS
 
@@ -357,9 +357,9 @@ Mango - Pure-Perl non-blocking I/O MongoDB driver
   mango->db('test')->collection('foo')->remove({bar => 'yada'});
 
   # Insert document with special BSON types
-  use Mango::BSON ':bson';
+  use BSON::Types ':all';
   my $oid = mango->db('test')->collection('foo')
-    ->insert({data => bson_bin("\x00\x01"), now => bson_time});
+    ->insert({data => bson_bytes("\x00\x01"), now => bson_time});
 
   # Non-blocking concurrent find
   my $delay = Mojo::IOLoop->delay(sub {
@@ -401,7 +401,7 @@ in this distribution is no replacement for it.
 Look at L<Mango::Collection> for CRUD operations.
 
 Many arguments passed to methods as well as values of attributes get
-serialized to BSON with L<Mango::BSON>, which provides many helper functions
+serialized to BSON with L<BSON>, which provides many helper functions
 you can use to generate data types that are not available natively in Perl.
 All connections will be reset automatically if a new process has been forked,
 this allows multiple processes to share the same L<Mango> object safely.

@@ -2,7 +2,7 @@ package Mango::Auth::SCRAM;
 
 use Mojo::Base 'Mango::Auth';
 use Mojo::Util qw(dumper md5_sum encode b64_encode b64_decode);
-use Mango::BSON 'bson_doc';
+use BSON::Types 'bson_doc';
 
 EVAL: {
   local $@;

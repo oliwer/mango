@@ -1,7 +1,7 @@
 package Mango::Cursor::Query;
 use Mojo::Base 'Mango::Cursor';
 
-use Mango::BSON 'bson_doc';
+use BSON::Types 'bson_doc';
 
 has [
   qw(await_data comment hint max_scan max_time_ms read_preference snapshot),
