@@ -5,10 +5,12 @@ use boolean;
 use Carp 'croak';
 use BSON::Types qw(bson_doc bson_oid bson_raw);
 use Mojo::IOLoop;
+use Mango::Promisify;
 
 has 'collection';
 has ordered => 1;
 
+promisify 'execute';
 sub execute {
   my ($self, $cb) = @_;
 

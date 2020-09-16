@@ -6,6 +6,7 @@ use Carp 'croak';
 use BSON::Types qw(bson_code bson_doc);
 use Mango::Collection;
 use Mango::GridFS;
+use Mango::Promisify;
 
 has [qw(mango name)];
 
@@ -23,6 +24,7 @@ sub collection {
   return Mango::Collection->new(db => $self, name => $name);
 }
 
+promisify 'collection_names';
 sub collection_names {
   my $self = shift;
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -44,6 +46,7 @@ sub collection_names {
   return $docs;
 }
 
+promisify 'command';
 sub command {
   my ($self, $command) = (shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -68,6 +71,7 @@ sub command {
   return $doc;
 }
 
+promisify 'dereference';
 sub dereference {
   my ($self, $dbref, $cb) = @_;
 
@@ -82,6 +86,7 @@ sub dereference {
 
 sub gridfs { Mango::GridFS->new(db => shift) }
 
+promisify 'list_collections';
 sub list_collections {
   my $self = shift;
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -104,6 +109,7 @@ sub list_collections {
     ->add_batch($cursor->{firstBatch});
 }
 
+promisify 'stats';
 sub stats { shift->command(bson_doc(dbstats => 1), @_) }
 
 1;

@@ -7,6 +7,7 @@ use BSON::Types qw(bson_code bson_doc bson_oid);
 use Mango::Bulk;
 use Mango::Cursor;
 use Mango::Cursor::Query;
+use Mango::Promisify;
 
 has [qw(db name)];
 
@@ -31,20 +32,24 @@ sub build_index_name { join '_', keys %{$_[1]} }
 
 sub bulk { Mango::Bulk->new(collection => shift) }
 
+promisify 'create';
 sub create {
   my $self = shift;
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
   return $self->_command(bson_doc(create => $self->name, %{shift // {}}), $cb);
 }
 
+promisify 'drop';
 sub drop { $_[0]->_command(bson_doc(drop => $_[0]->name), $_[1]) }
 
+promisify 'drop_index';
 sub drop_index {
   my ($self, $name) = (shift, shift);
   return $self->_command(bson_doc(dropIndexes => $self->name, index => $name),
     shift);
 }
 
+promisify 'ensure_index';
 sub ensure_index {
   my ($self, $spec) = (shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -70,12 +75,14 @@ sub find {
   );
 }
 
+promisify 'find_and_modify';
 sub find_and_modify {
   my ($self, $opts, $cb) = @_;
   return $self->_command(bson_doc(findAndModify => $self->name, %$opts),
     $cb, sub { my $doc = shift; $doc ? $doc->{value} : undef });
 }
 
+promisify 'find_one';
 sub find_one {
   my ($self, $query) = (shift, shift);
   $query = {_id => $query} if ref $query eq 'BSON::OID';
@@ -91,6 +98,7 @@ sub find_one {
 
 sub full_name { join '.', $_[0]->db->name, $_[0]->name }
 
+promisify 'index_information';
 sub index_information {
   my $self = shift;
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -106,6 +114,7 @@ sub index_information {
   );
 }
 
+promisify 'insert';
 sub insert {
   my ($self, $orig_docs, $cb) = @_;
   $orig_docs = [$orig_docs] unless ref $orig_docs eq 'ARRAY';
@@ -123,6 +132,7 @@ sub insert {
   return $self->_command($command, $cb, sub { @ids > 1 ? \@ids : $ids[0] });
 }
 
+promisify 'map_reduce';
 sub map_reduce {
   my ($self, $map, $reduce) = (shift, shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -140,6 +150,7 @@ sub map_reduce {
     $command => sub { shift; $self->$cb(shift, $self->_map_reduce(shift)) });
 }
 
+promisify 'options';
 sub options {
   my ($self, $cb) = @_;
 
@@ -147,6 +158,7 @@ sub options {
   $self->_command($cmd, $cb, sub { shift->{cursor}->{firstBatch}->[0] });
 }
 
+promisify 'remove';
 sub remove {
   my $self  = shift;
   my $cb    = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -164,6 +176,7 @@ sub remove {
   return $self->_command($command, $cb);
 }
 
+promisify 'rename';
 sub rename {
   my ($self, $name, $cb) = @_;
 
@@ -186,6 +199,7 @@ sub rename {
   return $doc->{ok} ? $self->db->collection($name) : undef;
 }
 
+promisify 'save';
 sub save {
   my ($self, $doc, $cb) = @_;
 
@@ -204,6 +218,7 @@ sub save {
 
 sub stats { $_[0]->_command(bson_doc(collstats => $_[0]->name), $_[1]) }
 
+promisify 'update';
 sub update {
   my ($self, $query, $update) = (shift, shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
