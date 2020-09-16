@@ -20,46 +20,44 @@ sub _credentials {
 }
 
 sub _authenticate {
-  my ($self, $id) = @_;
+    my ($self, $id) = @_;
 
-  my $mango = $self->mango;
-  my $cnx   = $self->mango->{connections}{$id};
-  my $creds = $self->{credentials};
+    my $mango = $self->mango;
+    my $cnx   = $self->mango->{connections}{$id};
+    my $creds = $self->{credentials};
 
-  my ($db, $user, $pass) = @$creds;
+    my ($db, $user, $pass) = @$creds;
 
-  my $scram_client = Authen::SCRAM::Client->new(
-    skip_saslprep => 1,
-    username      => $user,
-    password      => $pass
-  );
+    my $scram_client = Authen::SCRAM::Client->new(
+        skip_saslprep => 1,
+        username      => $user,
+        password      => $pass
+    );
 
-  my $delay = Mojo::IOLoop::Delay->new;
-  my $conv_id;
+    my $loop = Mojo::IOLoop->new;
+    my $conv_id;
 
-  my $end = $delay->begin;
-
-  my $command = $self->_cmd_sasl_start($scram_client->first_msg);
-  $mango->_fast($id, $db, $command, sub {
-    my ($mango, $err, $doc) = @_;
-    $conv_id = $doc->{conversationId};
-    my $final_msg = $scram_client->final_msg(b64_decode $doc->{payload});
-
-    my $command = $self->_cmd_sasl_continue($conv_id, $final_msg);
+    my $command = $self->_cmd_sasl_start($scram_client->first_msg);
     $mango->_fast($id, $db, $command, sub {
-      my ($mango, $err, $doc) = @_;
-      $scram_client->validate(b64_decode $doc->{payload});
-  
-      my $command = $self->_cmd_sasl_continue($conv_id, '');
-      $mango->_fast($id, $db, $command, sub {
         my ($mango, $err, $doc) = @_;
-        $mango->emit(connection => $id)->_next;
-        $end->();
-      })
-    })
-  });
+        $conv_id = $doc->{conversationId};
+        my $final_msg = $scram_client->final_msg(b64_decode $doc->{payload});
 
-  $delay->wait;
+        my $command = $self->_cmd_sasl_continue($conv_id, $final_msg);
+        $mango->_fast($id, $db, $command, sub {
+            my ($mango, $err, $doc) = @_;
+            $scram_client->validate(b64_decode $doc->{payload});
+
+            my $command = $self->_cmd_sasl_continue($conv_id, '');
+            $mango->_fast($id, $db, $command, sub {
+                my ($mango, $err, $doc) = @_;
+                $mango->emit(connection => $id)->_next;
+                $loop->stop;
+            })
+        })
+    });
+
+    $loop->start;
 }
 
 sub _cmd_sasl_start {
