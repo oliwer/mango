@@ -11,6 +11,7 @@ use Mango::Promisify;
 
 has [qw(db name)];
 
+promisify 'aggregate';
 sub aggregate {
   my ($self, $pipeline) = (shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
