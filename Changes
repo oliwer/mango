@@ -1,3 +1,8 @@
+2.0
+ - Promises support for all non-blocking methods 
+ - Fix Mojolicious 8.x compatibility
+ - Use official MongoDB BSON parser
+
 1.31  
  - Fix typo in the synopsis (#33)
 

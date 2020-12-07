@@ -1,7 +1,8 @@
 package Mango::Cursor::Query;
 use Mojo::Base 'Mango::Cursor';
 
-use Mango::BSON 'bson_doc';
+use BSON::Types 'bson_doc';
+use Mango::Promisify;
 
 has [
   qw(await_data comment hint max_scan max_time_ms read_preference snapshot),
@@ -37,6 +38,7 @@ sub clone {
   return $clone;
 }
 
+promisify 'count';
 sub count {
   my $self = shift;
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -61,6 +63,7 @@ sub count {
   return $doc ? $doc->{n} : 0;
 }
 
+promisify 'distinct';
 sub distinct {
   my ($self, $key) = (shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -79,6 +82,7 @@ sub distinct {
   $db->command($command => sub { shift; $self->$cb(shift, shift->{values}) });
 }
 
+promisify 'explain';
 sub explain {
   my ($self, $cb) = @_;
 

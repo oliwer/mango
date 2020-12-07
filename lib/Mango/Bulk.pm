@@ -1,13 +1,16 @@
 package Mango::Bulk;
 use Mojo::Base -base;
 
+use boolean;
 use Carp 'croak';
-use Mango::BSON qw(bson_doc bson_encode bson_oid bson_raw);
+use BSON::Types qw(bson_doc bson_oid bson_raw);
 use Mojo::IOLoop;
+use Mango::Promisify;
 
 has 'collection';
 has ordered => 1;
 
+promisify 'execute';
 sub execute {
   my ($self, $cb) = @_;
 
@@ -45,8 +48,8 @@ sub insert {
 sub remove     { shift->_remove(0) }
 sub remove_one { shift->_remove(1) }
 
-sub update     { shift->_update(\1, @_) }
-sub update_one { shift->_update(\0, @_) }
+sub update     { shift->_update(true, @_) }
+sub update_one { shift->_update(false, @_) }
 
 sub upsert { shift->_set(upsert => 1) }
 
@@ -57,7 +60,7 @@ sub _group {
   my $collection = $self->collection;
   return $type, $offset, bson_doc $type => $collection->name,
     $type eq 'insert' ? 'documents' : "${type}s" => $group,
-    ordered => $self->ordered ? \1 : \0,
+    ordered => $self->ordered ? true : false,
     writeConcern => $collection->db->build_write_concern;
 }
 
@@ -118,7 +121,7 @@ sub _op {
   my $batch_max = $mango->max_write_batch_size;
   my $ops       = $self->{ops} ||= [];
   my $previous  = @$ops ? $ops->[-1] : [];
-  my $bson      = bson_encode $doc;
+  my $bson      = BSON->new->encode_one($doc);
   my $size      = length $bson;
   my $new       = ($self->{size} // 0) + $size;
   my $limit     = $new > $bson_max || @$previous >= $batch_max + 2;
@@ -148,7 +151,7 @@ sub _set {
 sub _update {
   my ($self, $multi, $update) = @_;
   my $query = delete $self->{query} // {};
-  my $upsert = delete $self->{upsert} ? \1 : \0;
+  my $upsert = delete $self->{upsert} ? true : false;
   return $self->_op(
     update => {q => $query, u => $update, multi => $multi, upsert => $upsert});
 }

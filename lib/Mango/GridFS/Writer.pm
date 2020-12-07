@@ -1,9 +1,10 @@
 package Mango::GridFS::Writer;
 use Mojo::Base -base;
 
+use boolean;
 use Carp 'croak';
 use List::Util 'first';
-use Mango::BSON qw(bson_bin bson_doc bson_oid bson_time);
+use BSON::Types qw(bson_bytes bson_doc bson_oid bson_time);
 use Mojo::IOLoop;
 
 has chunk_size => 261120;
@@ -19,7 +20,7 @@ sub close {
     return Mojo::IOLoop->next_tick(sub { $self->$cb(undef, $files_id) });
   }
 
-  my @index   = (bson_doc(files_id => 1, n => 1), {unique => \1});
+  my @index   = (bson_doc(files_id => 1, n => 1), {unique => true});
   my $gridfs  = $self->gridfs;
   my $command = bson_doc filemd5 => $self->_files_id, root => $gridfs->prefix;
 
@@ -91,7 +92,7 @@ sub _chunk {
 
   my $n = $self->{n}++;
   return $bulk->insert(
-    {files_id => $self->_files_id, n => $n, data => bson_bin($chunk)});
+    {files_id => $self->_files_id, n => $n, data => bson_bytes($chunk)});
 }
 
 sub _files_id { shift->{files_id} //= bson_oid }

@@ -1,11 +1,12 @@
 
   Pure-Perl non-blocking I/O MongoDB driver, optimized for use with the
   [Mojolicious](http://mojolicio.us) real-time web framework.
+  It also supports [BSON::XS](https://metacpan.org/pod/BSON::XS) parser
 
 ```perl
 use Mojolicious::Lite;
 use Mango;
-use Mango::BSON ':bson';
+use BSON:Types ':all';
 
 my $uri = 'mongodb://<user>:<pass>@<server>/<database>';
 helper mango => sub { state $mango = Mango->new($uri) };
@@ -18,21 +19,17 @@ get '/' => sub {
   my $ip         = $c->tx->remote_address;
 
   # Store information about current visitor
-  $collection->insert({when => bson_time, from => $ip} => sub {
-    my ($collection, $err, $oid) = @_;
-
-    return $c->reply->exception($err) if $err;
-
+  $collection->insert_p({when => bson_time, from => $ip})->then(sub {
+    my ($oid) = @_;
     # Retrieve information about previous visitors
-    $collection->find->sort({when => -1})->fields({_id => 0})->all(sub {
-      my ($collection, $err, $docs) = @_;
-
-      return $c->reply->exception($err) if $err;
-
+    $collection->find->sort({when => -1})->fields({_id => 0})->all_p->then(sub {
+      my ($docs) = @_;
       # And show it to current visitor
       $c->render(json => $docs);
-    });
-  });
+    })
+  })->catch(sub {
+    return $c->reply->exception(@_)
+  })
 };
 
 app->start;

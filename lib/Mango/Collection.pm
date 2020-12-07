@@ -1,21 +1,25 @@
 package Mango::Collection;
 use Mojo::Base -base;
 
+use boolean;
 use Carp 'croak';
-use Mango::BSON qw(bson_code bson_doc bson_oid);
+use BSON::Types qw(bson_code bson_doc bson_oid);
 use Mango::Bulk;
 use Mango::Cursor;
 use Mango::Cursor::Query;
+use Mango::Promisify;
 
 has [qw(db name)];
 
+promisify 'aggregate';
 sub aggregate {
   my ($self, $pipeline) = (shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
 
+  my %command_ = %{shift // {}};
+  $command_{cursor} //= {} unless $command_{explain};
   my $command = bson_doc(aggregate => $self->name, pipeline => $pipeline,
-    %{shift // {}});
-  $command->{cursor} //= {} unless $command->{explain};
+    %command_);
 
   # Blocking
   return $self->_aggregate($command, $self->db->command($command)) unless $cb;
@@ -29,20 +33,24 @@ sub build_index_name { join '_', keys %{$_[1]} }
 
 sub bulk { Mango::Bulk->new(collection => shift) }
 
+promisify 'create';
 sub create {
   my $self = shift;
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
   return $self->_command(bson_doc(create => $self->name, %{shift // {}}), $cb);
 }
 
+promisify 'drop';
 sub drop { $_[0]->_command(bson_doc(drop => $_[0]->name), $_[1]) }
 
+promisify 'drop_index';
 sub drop_index {
   my ($self, $name) = (shift, shift);
   return $self->_command(bson_doc(dropIndexes => $self->name, index => $name),
     shift);
 }
 
+promisify 'ensure_index';
 sub ensure_index {
   my ($self, $spec) = (shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -68,15 +76,17 @@ sub find {
   );
 }
 
+promisify 'find_and_modify';
 sub find_and_modify {
   my ($self, $opts, $cb) = @_;
   return $self->_command(bson_doc(findAndModify => $self->name, %$opts),
     $cb, sub { my $doc = shift; $doc ? $doc->{value} : undef });
 }
 
+promisify 'find_one';
 sub find_one {
   my ($self, $query) = (shift, shift);
-  $query = {_id => $query} if ref $query eq 'Mango::BSON::ObjectID';
+  $query = {_id => $query} if ref $query eq 'BSON::OID';
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
 
   # Non-blocking
@@ -89,6 +99,7 @@ sub find_one {
 
 sub full_name { join '.', $_[0]->db->name, $_[0]->name }
 
+promisify 'index_information';
 sub index_information {
   my $self = shift;
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -104,23 +115,25 @@ sub index_information {
   );
 }
 
+promisify 'insert';
 sub insert {
   my ($self, $orig_docs, $cb) = @_;
   $orig_docs = [$orig_docs] unless ref $orig_docs eq 'ARRAY';
 
   # Make a shallow copy of the documents and add an id if needed
+  my @ids = map { $_->{_id} //= bson_oid } @$orig_docs;
   my @docs = map { bson_doc %$_ } @$orig_docs;
-  my @ids = map { $_->{_id} //= bson_oid } @docs;
 
   my $command = bson_doc
     insert       => $self->name,
     documents    => \@docs,
-    ordered      => \1,
+    ordered      => true,
     writeConcern => $self->db->build_write_concern;
 
   return $self->_command($command, $cb, sub { @ids > 1 ? \@ids : $ids[0] });
 }
 
+promisify 'map_reduce';
 sub map_reduce {
   my ($self, $map, $reduce) = (shift, shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -138,6 +151,7 @@ sub map_reduce {
     $command => sub { shift; $self->$cb(shift, $self->_map_reduce(shift)) });
 }
 
+promisify 'options';
 sub options {
   my ($self, $cb) = @_;
 
@@ -145,6 +159,7 @@ sub options {
   $self->_command($cmd, $cb, sub { shift->{cursor}->{firstBatch}->[0] });
 }
 
+promisify 'remove';
 sub remove {
   my $self  = shift;
   my $cb    = ref $_[-1] eq 'CODE' ? pop : undef;
@@ -152,16 +167,17 @@ sub remove {
   my $flags = shift // {};
 
   ($query, $flags) = ({_id => $query}, {single => 1})
-    if ref $query eq 'Mango::BSON::ObjectID';
+    if ref $query eq 'BSON::OID';
   my $command = bson_doc
     delete       => $self->name,
     deletes      => [{q => $query, limit => $flags->{single} ? 1 : 0}],
-    ordered      => \1,
+    ordered      => true,
     writeConcern => $self->db->build_write_concern;
 
   return $self->_command($command, $cb);
 }
 
+promisify 'rename';
 sub rename {
   my ($self, $name, $cb) = @_;
 
@@ -184,6 +200,7 @@ sub rename {
   return $doc->{ok} ? $self->db->collection($name) : undef;
 }
 
+promisify 'save';
 sub save {
   my ($self, $doc, $cb) = @_;
 
@@ -202,21 +219,22 @@ sub save {
 
 sub stats { $_[0]->_command(bson_doc(collstats => $_[0]->name), $_[1]) }
 
+promisify 'update';
 sub update {
   my ($self, $query, $update) = (shift, shift, shift);
   my $cb = ref $_[-1] eq 'CODE' ? pop : undef;
   my $flags = shift // {};
 
   $update = {
-    q => ref $query eq 'Mango::BSON::ObjectID' ? {_id => $query} : $query,
+    q => ref $query eq 'BSON::OID' ? {_id => $query} : $query,
     u => $update,
-    upsert => $flags->{upsert} ? \1 : \0,
-    multi  => $flags->{multi}  ? \1 : \0
+    upsert => $flags->{upsert} ? true : false,
+    multi  => $flags->{multi}  ? true : false,
   };
   my $command = bson_doc
     update       => $self->name,
     updates      => [$update],
-    ordered      => \1,
+    ordered      => true,
     writeConcern => $self->db->build_write_concern;
 
   return $self->_command($command, $cb);
@@ -225,11 +243,12 @@ sub update {
 sub _aggregate {
   my ($self, $command, $doc) = @_;
 
+  my %command_ = @$command;
   # Document (explain)
-  return $doc if $command->{explain};
+  return $doc if $command_{explain};
 
   # Collection
-  my $out = $command->{pipeline}[-1]{'$out'};
+  my $out = $command_{pipeline}[-1]{'$out'};
   return $self->db->collection($out) if defined $out;
 
   # Cursor

@@ -2,6 +2,7 @@ package Mango::Cursor;
 use Mojo::Base -base;
 
 use Mojo::IOLoop;
+use Mango::Promisify;
 
 has [qw(collection id ns)];
 has [qw(batch_size limit)] => 0;
@@ -12,6 +13,7 @@ sub add_batch {
   return $self;
 }
 
+promisify 'all';
 sub all {
   my ($self, $cb) = @_;
 
@@ -24,6 +26,7 @@ sub all {
   return \@all;
 }
 
+promisify 'next';
 sub next {
   my ($self, $cb) = @_;
   return defined $self->id ? $self->_continue($cb) : $self->_start($cb);
@@ -36,6 +39,7 @@ sub num_to_return {
   return $limit == 0 || ($size > 0 && $size < $limit) ? $size : $limit;
 }
 
+promisify 'rewind';
 sub rewind {
   my ($self, $cb) = @_;
 
